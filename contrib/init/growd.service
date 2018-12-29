@@ -1,0 +1,26 @@
+[Unit]
+Description=GROW's distributed currency daemon
+After=network.target
+
+[Service]
+User=grow
+Group=grow
+
+Type=forking
+PIDFile=/var/lib/growd/growd.pid
+
+ExecStart=/usr/bin/growd -daemon -pid=/var/lib/growd/growd.pid \
+          -conf=/etc/grow/grow.conf -datadir=/var/lib/growd
+
+ExecStop=-/usr/bin/grow-cli -conf=/etc/grow/grow.conf \
+         -datadir=/var/lib/growd stop
+
+Restart=always
+PrivateTmp=true
+TimeoutStopSec=60s
+TimeoutStartSec=2s
+StartLimitInterval=120s
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
