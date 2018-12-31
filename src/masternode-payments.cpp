@@ -330,7 +330,8 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew,
 
 	CAmount blockValue = GetBlockValue(nTargetHeight);
 	CAmount masternodePayment = GetMasternodePayment(nTargetHeight, blockValue, 0, fZGROWStake);
-
+        CAmount devFund = GetDevFundPayment(nTargetHeight, blockValue);
+        
 	if (hasPayment) {
 		if (fProofOfStake) {
 			/**For Proof Of Stake vout[0] must be null
@@ -345,7 +346,12 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew,
 
 			//subtract mn payment from the stake reward
 			if (!txNew.vout[1].IsZerocoinMint())
-                            txNew.vout[i - 1].nValue -= masternodePayment;
+                            txNew.vout[i - 1].nValue -= (masternodePayment + devFund);;
+                            
+                        if (devFund > 0) {                                    
+                            txNew.vout.push_back(CTxOut(devFund, GetScriptForDestination(Params().GetDevFundAddress().Get())));
+                        }
+
 		} else {
 			txNew.vout.resize(2);
 			txNew.vout[1].scriptPubKey = payee;

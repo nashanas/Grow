@@ -11,6 +11,7 @@
 #include "random.h"
 #include "util.h"
 #include "utilstrencodings.h"
+#include "base58.h"
 
 #include <assert.h>
 
@@ -146,7 +147,6 @@ public:
         nBlockZerocoinV2 = 1400; //!> The block that zerocoin v2 becomes active - roughly Tuesday, May 8, 2018 4:00:00 AM GMT
         nEnforceNewSporkKey = 1544220567; //!> Sporks signed after (GMT): Tuesday, May 1, 2018 7:00:00 AM GMT must use the new spork key
         nRejectOldSporkKey = 1544220567; //!> Fully reject old spork key after (GMT): Friday, June 1, 2018 12:00:00 AM
-
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
          * be spent as it did not originally exist in the database.
@@ -222,6 +222,11 @@ public:
         nZerocoinRequiredStakeDepth = 200; //The required confirmations for a zpiv to be stakable
 
         nBudget_Fee_Confirmations = 6; // Number of confirmations for the finalization fee
+    }
+    
+    CBitcoinAddress GetDevFundAddress() const
+    { 
+        return CBitcoinAddress("Ppx1p8av5vJYGEue6nx9kc3VKMVqQQZ19s"); 
     }
 
     const Checkpoints::CCheckpointData& Checkpoints() const
@@ -312,6 +317,10 @@ public:
         nBudget_Fee_Confirmations = 3; // Number of confirmations for the finalization fee. We have to make this very short
                                        // here because we only have a 8 block finalization window on testnet
     }
+    
+    CBitcoinAddress GetDevFundAddress() const
+    { return CBitcoinAddress("y4XhfKjJPwxi42YRQssbdDytJ74W8V1bVt"); }
+    
     const Checkpoints::CCheckpointData& Checkpoints() const
     {
         return dataTestnet;
@@ -361,6 +370,7 @@ public:
         fMineBlocksOnDemand = true;
         fTestnetToBeDeprecatedFieldRPC = false;
     }
+    
     const Checkpoints::CCheckpointData& Checkpoints() const
     {
         return dataRegtest;

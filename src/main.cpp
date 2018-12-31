@@ -1837,6 +1837,11 @@ int64_t GetDevFundPayment(int nHeight, int64_t blockValue)
 {
     int64_t ret_val = 0;
     
+    if (nHeight > 1200)
+    {
+         ret_val = blockValue * 5 / 100;  // 5%
+    }
+    
     return ret_val;
 }
 
@@ -3894,11 +3899,26 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
             if (!tx.vout[1].IsZerocoinMint()) {
                 int nIndex = tx.vout.size() -1;
                 CAmount nBlockValue = GetBlockValue(nHeight);
+                CAmount nDevFundValue = GetDevFundPayment(nHeight, nBlockValue);
                 CAmount nMasternodeValue = GetMasternodePayment(nHeight, nBlockValue, 0, false);
 
                 if ((tx.vout[nIndex].nValue != nMasternodeValue) && (mnodeman.size() > 0)) {
                     return state.DoS(100, error("%s : rejected by check masternode lock-in at %d Height:%d", __func__, nHeight),
                         REJECT_INVALID, "check masternode mismatch");
+                }
+                
+                if (nDevFundValue > 0)
+                {
+                    if (tx.vout[nIndex].nValue != nDevFundValue) {
+                        return state.DoS(100, error("%s : rejected by check devfund value lock-in at %d", __func__, nHeight),
+                            REJECT_INVALID, "check devfund mismatch");
+                    }
+
+                    CScript devScriptPubKey = GetScriptForDestination(Params().GetDevFundAddress().Get());
+                    if (tx.vout[nIndex].scriptPubKey != devScriptPubKey) {
+                        return state.DoS(100, error("%s : rejected by check devfund address lock-in at %d", __func__, nHeight),
+                            REJECT_INVALID, "check devfund mismatch");
+                    }
                 }
             }
         }

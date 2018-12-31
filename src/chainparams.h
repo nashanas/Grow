@@ -18,6 +18,8 @@
 #include "libzerocoin/Params.h"
 #include <vector>
 
+class CBitcoinAddress;
+
 typedef unsigned char MessageStartChars[MESSAGE_START_SIZE];
 
 struct CDNSSeedData {
@@ -101,7 +103,7 @@ public:
     std::string ObfuscationPoolDummyAddress() const { return strObfuscationPoolDummyAddress; }
     int64_t StartMasternodePayments() const { return nStartMasternodePayments; }
     int64_t Budget_Fee_Confirmations() const { return nBudget_Fee_Confirmations; }
-
+    virtual CBitcoinAddress GetDevFundAddress() const = 0;
     CBaseChainParams::Network NetworkID() const { return networkID; }
 
     /** Zerocoin **/
