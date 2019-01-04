@@ -2080,21 +2080,7 @@ bool CWallet::SelectStakeCoins(std::list<std::unique_ptr<CStakeInput> >& listInp
     CAmount nAmountSelected = 0;
     
     auto const nTime = GetTime();
-    
-    if (nLastSelectTime < 1)
-    {
-        nLastSelectTime = GetTime();
-    }
-    
-    if (nSelectionPeriod < 300) 
-    {
-        nSelectionPeriod = 300; //5min
-    }
-    
-    if (nTime - nLastSelectTime < nSelectionPeriod) {
-        return false;
-    }
-    
+        
     if (GetBoolArg("-growstake", true)) {
         for (const COutput &out : vCoins) {
             //make sure not to outrun target amount

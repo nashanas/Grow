@@ -7,7 +7,7 @@ architectures:
 packages:
 - "faketime"
 remotes:
-- "url": "https://github.com/grow-project/grow-detached-sigs.git"
+- "url": "https://github.com/growaleaf/grow-detached-sigs.git"
   "dir": "signature"
 files:
 - "grow-osx-unsigned.tar.gz"

@@ -1833,11 +1833,15 @@ int64_t GetBlockValue(int nHeight)
     return nSubsidy;
 }
 
-int64_t GetDevFundPayment(int nHeight, int64_t blockValue)
+int64_t GetDevFundPayment(int nHeight, int64_t blockValue, bool isZGROWStake)
 {
     int64_t ret_val = 0;
     
-    if (nHeight > 1200)
+    if (isZGROWStake)
+    {
+        ret_val = 0;
+    }
+    else if (nHeight > 1200)
     {
          ret_val = blockValue * 5 / 100;  // 5%
     }
@@ -3826,6 +3830,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     if (block.vtx.empty() || !block.vtx[0].IsCoinBase())
         return state.DoS(100, error("CheckBlock() : first tx is not coinbase"),
             REJECT_INVALID, "bad-cb-missing");
+
     for (unsigned int i = 1; i < block.vtx.size(); i++)
         if (block.vtx[i].IsCoinBase())
             return state.DoS(100, error("CheckBlock() : more than one coinbase"),
@@ -3897,28 +3902,29 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         if (nHeight > Params().LAST_POW_BLOCK()) {
             CTransaction tx = block.vtx[1];
             if (!tx.vout[1].IsZerocoinMint()) {
-                int nIndex = tx.vout.size() -1;
+                int nIndex = tx.vout.size() -2;
                 CAmount nBlockValue = GetBlockValue(nHeight);
-                CAmount nDevFundValue = GetDevFundPayment(nHeight, nBlockValue);
+                CAmount nDevFundValue = GetDevFundPayment(nHeight, nBlockValue, false);
                 CAmount nMasternodeValue = GetMasternodePayment(nHeight, nBlockValue, 0, false);
 
                 if ((tx.vout[nIndex].nValue != nMasternodeValue) && (mnodeman.size() > 0)) {
-                    return state.DoS(100, error("%s : rejected by check masternode lock-in at %d Height:%d", __func__, nHeight),
+                    return state.DoS(100, error("%s : rejected by check masternode lock-in at Height:%d, (masternode transaction:%s, expected: %s", __func__, nHeight,  FormatMoney(tx.vout[nIndex].nValue).c_str(), FormatMoney(nMasternodeValue).c_str()),
                         REJECT_INVALID, "check masternode mismatch");
                 }
                 
-                if (nDevFundValue > 0)
-                {
-                    if (tx.vout[nIndex].nValue != nDevFundValue) {
-                        return state.DoS(100, error("%s : rejected by check devfund value lock-in at %d", __func__, nHeight),
-                            REJECT_INVALID, "check devfund mismatch");
-                    }
+                if (tx.vout[nIndex + 1].nValue != nDevFundValue) {
+                    return state.DoS(100, error("%s : rejected by check devfund value lock-in at Height:%d , (devfund transaction:%s, expected: %s", __func__, nHeight, FormatMoney(tx.vout[nIndex].nValue).c_str(), FormatMoney(nDevFundValue).c_str()),
+                        REJECT_INVALID, "check devfund mismatch");
+                }
 
+                if (nHeight != 0 && !IsInitialBlockDownload()) {
                     CScript devScriptPubKey = GetScriptForDestination(Params().GetDevFundAddress().Get());
-                    if (tx.vout[nIndex].scriptPubKey != devScriptPubKey) {
+                    if (tx.vout[nIndex + 1].scriptPubKey != devScriptPubKey) {
                         return state.DoS(100, error("%s : rejected by check devfund address lock-in at %d", __func__, nHeight),
                             REJECT_INVALID, "check devfund mismatch");
                     }
+                } else if (fDebug) {
+                    LogPrintf("CheckBlock(): Devfund destination check skipped on sync\n");
                 }
             }
         }
@@ -3965,7 +3971,7 @@ bool CheckWork(const CBlock block, CBlockIndex* const pindexPrev)
 
     unsigned int nBitsRequired = GetNextWorkRequired(pindexPrev, &block);
 
-    if (block.IsProofOfWork() && (pindexPrev->nHeight + 1 <= 68589)) {
+    if (block.IsProofOfWork() && (pindexPrev->nHeight + 1 <= 1000)) {
         double n1 = ConvertBitsToDouble(block.nBits);
         double n2 = ConvertBitsToDouble(nBitsRequired);
 

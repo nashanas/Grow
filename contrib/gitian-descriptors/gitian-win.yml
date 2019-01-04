@@ -1,5 +1,5 @@
 ---
-name: "grow-win-3.1"
+name: "grow-win-1.0"
 enable_cache: true
 suites:
 - "trusty"
@@ -22,7 +22,7 @@ packages:
 - "ca-certificates"
 - "python"
 remotes:
-- "url": "https://github.com/grow-project/grow.git"
+- "url": "https://github.com/growaleaf/Grow.git"
   "dir": "grow"
 files: []
 script: |

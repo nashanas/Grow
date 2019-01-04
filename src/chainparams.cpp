@@ -57,10 +57,11 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     boost::assign::map_list_of
     (       0, uint256("0x00000b54c8874f6cefc66ad7b8cf662052083e7f6d88e511cc03a980a90fc4b4"))
     (       2, uint256("0x0000082b3683e252925321ceeda5f7df3998d8371d3ba45616d38203ac39f11f"))
+    (    1000, uint256("0x0000001e41106f58f8fb02d97392ecee641c41ce73f5bdb101b0bd71f3882e21"))  //last pow
     ;
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
-    1545260538, // * UNIX timestamp of last checkpoint block
+    1546267137, // * UNIX timestamp of last checkpoint block
     0,    // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
     2000        // * estimated number of transactions per day after checkpoint
@@ -191,7 +192,7 @@ public:
 
         convertSeed6(vFixedSeeds, pnSeed6_main, ARRAYLEN(pnSeed6_main));
 
-        fMiningRequiresPeers = true;
+        fMiningRequiresPeers = false;
         fAllowMinDifficultyBlocks = false;
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
