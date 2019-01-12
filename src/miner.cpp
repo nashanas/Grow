@@ -143,7 +143,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         CMutableTransaction txCoinStake;
         int64_t nSearchTime = pblock->nTime; // search to current time
         bool fStakeFound = false;
-        if ((nSearchTime >= nLastCoinStakeSearchTime) && (nSearchTime - nLastCoinStakeSearchTime) > 180) {
+        if ((nSearchTime >= nLastCoinStakeSearchTime)) {
             unsigned int nTxNewTime = 0;
             if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime - nLastCoinStakeSearchTime, txCoinStake, nTxNewTime)) {
                 pblock->nTime = nTxNewTime;
