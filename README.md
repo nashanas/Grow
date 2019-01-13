@@ -8,29 +8,28 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
 - Fast transactions featuring guaranteed zero confirmation transactions, we call it _SwiftX_.
 - Decentralized blockchain voting providing for consensus based advancement of the current Masternode
   technology used to secure the network and provide the above features, each Masternode is secured
-  with a collateral of 40,000 GROW.
+  with a collateral of 30,000 GROW.
 
   
 <table>
   <th colspan=2>Official links:</th>
 
-<tr><td>Website:</td><td> https://projectgrow.tech</td></tr>
-<tr><td>Explorer:</td><td> http://explorer.projectgrow.tech</td></tr>
-<tr><td>White Paper:</td><td> https://projectgrow.tech/White_Paper.pdf</td></tr>
-<tr><td>Discord:</td><td> https://discord.gg/pEj3fej</td></tr>
-<tr><td>Twitter:</td><td> https://twitter.com/Grow_GROW</td></tr>
-<tr><td>Facebook:</td><td> https://www.facebook.com/GrowGROW</td></tr>
-<tr><td>Telegram:</td><td> https://t.me/grow_grow</td></tr>
-<tr><td>Bitcointalk ANN:</td><td> https://bitcointalk.org/index.php?topic=2454798</td></tr>
-<tr><td>Github:</td><td> https://github.com/growaleaf/GrowMN</td></tr>
-<tr><td>CoinMarketCap</td><td>https://coinmarketcap.com/currencies/grow/</td></tr>
+<tr><td>Website:</td><td> https://growhappy.world</td></tr>
+<tr><td>Explorer:</td><td> http://explorer.growhappy.world</td></tr>
+<tr><td>White Paper:</td><td> TBD</td></tr>
+<tr><td>Discord:</td><td> https://discord.gg/7efXmDm</td></tr>
+<tr><td>Twitter:</td><td> https://twitter.com/GROW_coin</td></tr>
+<tr><td>Facebook:</td><td> TBD</td></tr>
+<tr><td>Telegram:</td><td>https://t.me/GROWcoinOfficial</td></tr>
+<tr><td>Bitcointalk ANN:</td><td> TBD</td></tr>
+<tr><td>Github:</td><td> https://github.com/growaleaf/Grow</td></tr>
+<tr><td>CoinMarketCap</td><td>TBD</td></tr>
 </table>
 
 <table>
   <th colspan=2>Exchanges</th>
 
-<tr><td>Crex24:</td><td> https://crex24.com/exchange/GROW-BTC</td></tr>
-<tr><td>CryptoBridge:</td><td> https://wallet.crypto-bridge.org/market/BRIDGE.GROW_BRIDGE.BTC</td></tr>
+<tr><td>TBD</td></tr>
 </table>
 
 
@@ -38,7 +37,7 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
 ### Coin Specs
 <table>
 <tr><td>Algo</td><td>Quark</td></tr>
-  <tr><td>Masternode Collateral</td><td>40,000 GROW</td></tr>
+  <tr><td>Masternode Collateral</td><td>30,000 GROW</td></tr>
 <tr><td>Difficulty Retargeting</td><td>Every Block</td></tr>
 <tr><td>Max Coin Supply</td><td>50,000,000</td></tr>
 <tr><td>Premine in block 1</td><td>11,500,000*</td></tr>
