@@ -1,7 +1,7 @@
 Grow Core integration/staging repository
 =====================================
 
-[![Build Status](https://travis-ci.org/growaleaf/GrowMN.svg?branch=master)](https://travis-ci.org/growaleaf/GrowMN) [![GitHub version](https://badge.fury.io/gh/grow%2Fgrow.svg)](https://badge.fury.io/gh/grow%2Fgrow) [![Snap Status](https://build.snapcraft.io/badge/grow/grow.svg)](https://build.snapcraft.io/user/grow/grow) [![GitHub issues](https://img.shields.io/github/issues/grow/grow.svg)](https://github.com/growaleaf/GrowMN/issues) [![GitHub forks](https://img.shields.io/github/forks/grow/grow.svg)](https://github.com/growaleaf/GrowMN/network) [![GitHub stars](https://img.shields.io/github/stars/grow/grow.svg)](https://github.com/growaleaf/GrowMN/stargazers) [![GitHub license](https://img.shields.io/github/license/grow/grow.svg)](https://github.com/growaleaf/GrowMN/blob/master/COPYING) [![Twitter](https://img.shields.io/twitter/url/https://github.com/growaleaf/GrowMN.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=http%3A%2F%2Fgithub.com%2Fgrow%2Fgrow)
+[![Build Status](https://travis-ci.org/growaleaf/Grow.svg?branch=master)](https://travis-ci.org/growaleaf/Grow) [![GitHub version](https://img.shields.io/twitter/url/https://github.com/growaleaf/Grow.svg?style=social)](https://twitter.com/intent/tweet?text=Wow:&url=http%3A%2F%2Fgithub.com%2Fgrow%2Fgrow)
 
 Grow is a cutting edge cryptocurrency, with many features not available in most other cryptocurrencies.
 - Anonymized transactions using the _Zerocoin Protocol_.
