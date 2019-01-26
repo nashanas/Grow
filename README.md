@@ -40,13 +40,12 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
   <tr><td>Masternode Collateral</td><td>30,000 GROW</td></tr>
 <tr><td>Difficulty Retargeting</td><td>Every Block</td></tr>
 <tr><td>Max Coin Supply</td><td>50,000,000</td></tr>
-<tr><td>Premine in block 1</td><td>11,500,000*</td></tr>
+<tr><td>Premine in block 1</td><td>1,800,000*</td></tr>
 <tr><td>Full Premine</td><td>to handle snapshot*</td></tr>
   <tr><td>Block Time</td><td>180 seconds</td></tr>
-  <tr><td>Block Minting</td><td>40 confirmations</td></tr>
+  <tr><td>Block Minting</td><td>79 confirmations</td></tr>
   <tr><td>Block Transactions</td><td>5 confirmations</td></tr>
-  <tr><td>Block Maturity</td><td>8 hours</td></tr>
-  <tr><td>Minimum Stake Age</td><td>12 hours</td></tr>
+  <tr><td>Minimum Stake Age</td><td>10 hours</td></tr>
 </table>
 *additional coins in premine not for snapshot distributed to promote the project (not to be retained by developers)
 
@@ -55,27 +54,28 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
 <table>
 <th colspan=4>PoW Phase</th>
 <tr><th>Block Height</th><th>Reward Amount</th><th>Notes</th></tr>
-<tr><td>1</td><td>11,500,000 GROW</td><td>Initial Premine to Former Chain</td></tr>
-<tr><td>2-1000</td><td>0.1 GROW</td><td>Closed Mining</td></tr>
+<tr><td>1</td><td>1,800,000 GROW</td><td>Initial Premine to Former Chain</td></tr>
+<tr><td>2-1000</td><td>10 GROW</td><td>Closed Mining</td></tr>
 <tr><th colspan=4>PoS Phase</th></tr>
 <tr><th>Block Height</th><th colspan=1>Reward Amount</th></tr>
-<tr><td>1,001-15,000</td><td>1 GROW</td></tr>
-  <tr><td>15,001-65,000</td><td>4 GROW</td></tr>
-  <tr><td>65,001-120,000</td><td>12 GROW</td></tr>
-    <tr><td>120,001-160,000</td><td>10 GROW</td></tr>
-  <tr><td>160,001-*</td><td>8 GROW</td></tr>
+<tr><td>1,001-30,000</td><td>200 GROW</td></tr>
+  <tr><td>30,001-170,000</td><td>75 GROW</td></tr>
+  <tr><td>170,001-400,000</td><td>50 GROW</td></tr>
+    <tr><td>400,001-600,000</td><td>35 GROW</td></tr>
+  <tr><td>600,001-*</td><td>25 GROW</td></tr>
 </table>
 
 ### PoS Rewards Breakdown
 
 <table>
-<th>Block Height</th><th>Masternodes & Stakers</th>
-<tr><td>1,001-*</td><td>70% ( GROW) & 30% ( GROW) respectively</td></tr>
+<tr><th>Block Height</th><th>Masternodes </th> <th> Stakers</th> <th> DEV fund</th>
+<tr><td>1,001-30,000</td><td>55% </td> <td> 40% </td> <td> 5% </td></tr>
+<tr><td>-30,001-*</td><td>70% </td> <td> 25% </td> <td> 5% </td></tr>
 </table>
 
 
 <table>
   <th colspan=1>Masternode Installation Script:</th>
   <tr><td>Remote Masternode VPS, Ubuntu 18.04 LTS, 1GB RAM, 1 CPU Core </td></td>  
-<tr><td>sudo curl -L https://raw.githubusercontent.com/growaleaf/GrowMN/master/GrowMN-Install.sh | bash</td></td>
+<tr><td>sudo curl -L https://raw.githubusercontent.com/growaleaf/Grow/master/GrowMN-Install.sh | bash</td></td>
 </table>
