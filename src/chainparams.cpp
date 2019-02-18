@@ -59,10 +59,11 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     (       2, uint256("0x0000082b3683e252925321ceeda5f7df3998d8371d3ba45616d38203ac39f11f"))
     (    1000, uint256("0x0000001e41106f58f8fb02d97392ecee641c41ce73f5bdb101b0bd71f3882e21"))  //last pow
     (    2231, uint256("0xcd28831d551eed13f94c287108a911c4c65c81e275f8f456b909de94c0bac6aa"))
+    (    6356, uint256("0x91acfc23c00087bfb7ae74a95bf4265f30254e5bad6c8c6b8ee2f98ace2abb54"))
     ;
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
-    1547251289, // * UNIX timestamp of last checkpoint block
+    1550451544, // * UNIX timestamp of last checkpoint block
     0,    // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
     2000        // * estimated number of transactions per day after checkpoint
@@ -182,6 +183,8 @@ public:
         vSeeds.push_back(CDNSSeedData("seed01", "66.55.159.232"));
         vSeeds.push_back(CDNSSeedData("seed02", "45.76.143.181"));
         vSeeds.push_back(CDNSSeedData("seed03", "45.76.56.187"));
+        vSeeds.push_back(CDNSSeedData("seed04", "199.192.24.12"));
+        vSeeds.push_back(CDNSSeedData("seed05", "45.63.119.132"));
         
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 56);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 50);
