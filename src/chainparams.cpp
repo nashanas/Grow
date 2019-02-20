@@ -148,8 +148,8 @@ public:
         nBlockEnforceInvalidUTXO = 1200; //Start enforcing the invalid UTXO's
         nInvalidAmountFiltered = 0*COIN; //Amount of invalid coins filtered through exchanges, that should be considered valid
         nBlockZerocoinV2 = 1400; //!> The block that zerocoin v2 becomes active - roughly Tuesday, May 8, 2018 4:00:00 AM GMT
-        nEnforceNewSporkKey = 1544220567; //!> Sporks signed after (GMT): Tuesday, May 1, 2018 7:00:00 AM GMT must use the new spork key
-        nRejectOldSporkKey = 1544220567; //!> Fully reject old spork key after (GMT): Friday, June 1, 2018 12:00:00 AM
+        nEnforceNewSporkKey = 1552179015; //!> Sporks signed after (GMT): Tuesday, Sunday 10 March 2019 00:50:15 must use the new spork key
+        nRejectOldSporkKey = 1553043015; //!> Fully reject old spork key after (GMT): Wednesday 20 March 2019 00:50:15
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
          * be spent as it did not originally exist in the database.
@@ -206,7 +206,7 @@ public:
         fHeadersFirstSyncingActive = false;
 
         nPoolMaxTransactions = 3;
-        strSporkKey = "04e20c7ff0795ba2ca850af8e1735efcb48dcb96fd150bedfd442adef8e4305fdd2d91a90c2fbe88d517cfd0b4a0dc41937afdbad85d535b08276a211d9a279d9b";
+        strSporkKey = "0496bf8123a98ef714f82b89734e84936fdd4676fae2ef8093ad862308b7afd480ce8a3a8aa237a3e4e02354d8ef06811449a2fe97e31b281016a4abec6191f1f9";
         strSporkKeyOld = "04e20c7ff0795ba2ca850af8e1735efcb48dcb96fd150bedfd442adef8e4305fdd2d91a90c2fbe88d517cfd0b4a0dc41937afdbad85d535b08276a211d9a279d9b";
         strObfuscationPoolDummyAddress = "PrhtGG3qrXRYexMJTYYn8f6Xmh699DFvSa";
         nStartMasternodePayments = 1403728576; //Wed, 25 Jun 2014 20:36:16 GMT
@@ -279,6 +279,7 @@ public:
         nBlockZerocoinV2 = 444020; //!> The block that zerocoin v2 becomes active
         nEnforceNewSporkKey = 1521604800; //!> Sporks signed after Wednesday, March 21, 2018 4:00:00 AM GMT must use the new spork key
         nRejectOldSporkKey = 1522454400; //!> Reject old spork key after Saturday, March 31, 2018 12:00:00 AM GMT
+        
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1544220568;
