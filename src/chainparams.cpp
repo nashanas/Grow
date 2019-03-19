@@ -56,14 +56,12 @@ static void convertSeed6(std::vector<CAddress>& vSeedsOut, const SeedSpec6* data
 static Checkpoints::MapCheckpoints mapCheckpoints =
     boost::assign::map_list_of
     (       0, uint256("0x00000b54c8874f6cefc66ad7b8cf662052083e7f6d88e511cc03a980a90fc4b4"))
-    (       2, uint256("0x0000082b3683e252925321ceeda5f7df3998d8371d3ba45616d38203ac39f11f"))
-    (    1000, uint256("0x0000001e41106f58f8fb02d97392ecee641c41ce73f5bdb101b0bd71f3882e21"))  //last pow
-    (    2231, uint256("0xcd28831d551eed13f94c287108a911c4c65c81e275f8f456b909de94c0bac6aa"))
-    (    6356, uint256("0x91acfc23c00087bfb7ae74a95bf4265f30254e5bad6c8c6b8ee2f98ace2abb54"))
+    (       2, uint256("0x000004eb464d0dfd2c54d3923d7c76512d8102d5af7b2cad027eba20f966ceb3"))
+    (     300, uint256("0x0000002c586fb3940562761ca46a7b75275a8bf19d6adfdafff7b320d714ac21"))  //last pow
     ;
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
-    1550451544, // * UNIX timestamp of last checkpoint block
+    1552857379, // * UNIX timestamp of last checkpoint block
     0,    // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
     2000        // * estimated number of transactions per day after checkpoint
@@ -128,18 +126,19 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 0;
-        nTargetTimespan = 3 * 60; // GROW: 1 day
-        nTargetSpacing = 3 * 60;  // GROW: 1 minute
+        nTargetTimespan = 2 * 60; // GROW: 1 day
+        nTargetSpacing = 2 * 60;  // GROW: 1 minute
         nMaturity = 79;
         nMasternodeCountDrift = 20;
         nMaxMoneyOut = 32000000 * COIN;
         nMNCollateral = 30000 * COIN;
+        nStakeInputMinimal = 50 * COIN;
 
         /** Height or Time Based Activations **/
-        nLastPOWBlock = 1000;
-        nModifierUpdateBlock = 1100;
-        nZerocoinStartHeight = 700;
-        nZerocoinAccumulationStartHeight = 700;// RCP command starts accumulation here 
+        nLastPOWBlock = 300;
+        nModifierUpdateBlock = 0;
+        nZerocoinStartHeight = 50;
+        nZerocoinAccumulationStartHeight = 50;// RCP command starts accumulation here 
         nZerocoinStartTime = 1545266183; // October 17, 2017 4:30:00 AM
         nBlockEnforceSerialRange = 1; //Enforce serial range starting this block
         nBlockRecalculateAccumulators = 1350; //Trigger a recalculation of accumulators
@@ -147,7 +146,7 @@ public:
         nBlockLastGoodCheckpoint = 1348; //Last valid accumulator checkpoint
         nBlockEnforceInvalidUTXO = 1200; //Start enforcing the invalid UTXO's
         nInvalidAmountFiltered = 0*COIN; //Amount of invalid coins filtered through exchanges, that should be considered valid
-        nBlockZerocoinV2 = 1400; //!> The block that zerocoin v2 becomes active - roughly Tuesday, May 8, 2018 4:00:00 AM GMT
+        nBlockZerocoinV2 = 100; //!> The block that zerocoin v2 becomes active - roughly Tuesday, May 8, 2018 4:00:00 AM GMT
         nEnforceNewSporkKey = 1552179015; //!> Sporks signed after (GMT): Tuesday, Sunday 10 March 2019 00:50:15 must use the new spork key
         nRejectOldSporkKey = 1553043015; //!> Fully reject old spork key after (GMT): Wednesday 20 March 2019 00:50:15
         /**
@@ -231,7 +230,7 @@ public:
     
     CBitcoinAddress GetDevFundAddress() const
     { 
-        return CBitcoinAddress("Ppx1p8av5vJYGEue6nx9kc3VKMVqQQZ19s"); 
+        return CBitcoinAddress("PoBymyWZrqXTJY5wadANfxWu3uycXmMocC"); 
     }
 
     const Checkpoints::CCheckpointData& Checkpoints() const
@@ -261,7 +260,7 @@ public:
         nRejectBlockOutdatedMajority = 75;
         nToCheckBlockUpgradeMajority = 100;
         nMinerThreads = 0;
-        nTargetTimespan = 1 * 60; // GROW: 1 day
+        nTargetTimespan = 2 * 60; // GROW: 1 day
         nTargetSpacing = 1 * 60;  // GROW: 1 minute
         nLastPOWBlock = 200;
         nMaturity = 15;
@@ -279,7 +278,7 @@ public:
         nBlockZerocoinV2 = 444020; //!> The block that zerocoin v2 becomes active
         nEnforceNewSporkKey = 1521604800; //!> Sporks signed after Wednesday, March 21, 2018 4:00:00 AM GMT must use the new spork key
         nRejectOldSporkKey = 1522454400; //!> Reject old spork key after Saturday, March 31, 2018 12:00:00 AM GMT
-        
+        nStakeInputMinimal = 20 * COIN;
 
         //! Modify the testnet genesis block so the timestamp is valid for a later start.
         genesis.nTime = 1544220568;
@@ -291,10 +290,6 @@ public:
 
         vFixedSeeds.clear();
         vSeeds.clear();
-        vSeeds.push_back(CDNSSeedData("fuzzbawls.pw", "grow-testnet.seed.fuzzbawls.pw"));
-        vSeeds.push_back(CDNSSeedData("fuzzbawls.pw", "grow-testnet.seed2.fuzzbawls.pw"));
-        vSeeds.push_back(CDNSSeedData("s3v3nh4cks.ddns.net", "s3v3nh4cks.ddns.net"));
-        vSeeds.push_back(CDNSSeedData("88.198.192.110", "88.198.192.110"));
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1, 55); 
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1, 109);
@@ -354,12 +349,13 @@ public:
         nRejectBlockOutdatedMajority = 950;
         nToCheckBlockUpgradeMajority = 1000;
         nMinerThreads = 1;
-        nTargetTimespan = 24 * 60 * 60; // GROW: 1 day
+        nTargetTimespan = 2 * 60 * 60; // GROW: 1 day
         nTargetSpacing = 1 * 60;        // GROW: 1 minutes
         bnProofOfWorkLimit = ~uint256(0) >> 1;
         genesis.nTime = 1518696183;             // GMT: Thursday, 15. February 2018 12:03:03
         genesis.nBits = 0x207fffff;
         genesis.nNonce = 574755;                // hex 57 47 52 in text = GROW
+        nStakeInputMinimal = 20 * COIN;
 
         hashGenesisBlock = genesis.GetHash();
         nDefaultPort = 35437;

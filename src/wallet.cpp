@@ -2086,6 +2086,9 @@ bool CWallet::SelectStakeCoins(std::list<std::unique_ptr<CStakeInput> >& listInp
             //make sure not to outrun target amount
             if (nAmountSelected + out.tx->vout[out.i].nValue > nTargetAmount)
                 continue;
+            
+            if (out.tx->vout[out.i].nValue < Params().StakeInputMinimal())
+                continue;
 
             //if zerocoinspend, then use the block time
             int64_t nTxTime = out.tx->GetTxTime();
@@ -2961,11 +2964,15 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
     // Get the list of stakable inputs
     std::list<std::unique_ptr<CStakeInput> > listInputs;
-    if (!SelectStakeCoins(listInputs, nBalance - nReserveBalance))
+    if (!SelectStakeCoins(listInputs, nBalance - nReserveBalance)) {
+        if (fDebug) LogPrintf("%s: selectStakeCoins failed\n", __func__);
         return false;
+    }
 
-    if (listInputs.empty())
+    if (listInputs.empty()) {
+        if (fDebug) LogPrintf("%s: listInputs empty\n",  __func__);
         return false;
+    }
 
     if (GetAdjustedTime() - chainActive.Tip()->GetBlockTime() < 60)
         MilliSleep(10000);
@@ -2981,7 +2988,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         //make sure that enough time has elapsed between
         CBlockIndex* pindex = stakeInput->GetIndexFrom();
         if (!pindex || pindex->nHeight < 1) {
-            LogPrintf("*** no pindexfrom\n");
+            LogPrintf("%s: no pindexfrom\n",  __func__);
             continue;
         }
 

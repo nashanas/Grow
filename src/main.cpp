@@ -1903,19 +1903,23 @@ int64_t GetBlockValue(int nHeight)
 
     int64_t nSubsidy = 0;
     if (nHeight == 1) {
-        nSubsidy = 1800000 * COIN;
+        nSubsidy = 2000000 * COIN;
     } else if (nHeight <= Params().LAST_POW_BLOCK()) {
         nSubsidy = 10 * COIN;
-    } else if (nHeight <= 30000)
-        nSubsidy = 200 * COIN;
-    else if (nHeight <= 170000)
-        nSubsidy = 75 * COIN;
-    else if (nHeight <= 400000)
-        nSubsidy = 50 * COIN;
-    else if (nHeight <= 600000)
+    } else if (nHeight <= 15000)
+        nSubsidy = 12 * COIN;
+    else if (nHeight <= 50000)
+        nSubsidy = 45 * COIN;
+    else if (nHeight <= 150000)
         nSubsidy = 35 * COIN;
-    else
+    else if (nHeight <= 300000)
         nSubsidy = 25 * COIN;
+    else if (nHeight <= 600000)
+        nSubsidy = 12 * COIN;
+    else if (nHeight <= 750000)
+        nSubsidy = 7.5 * COIN;
+    else
+        nSubsidy = 5 * COIN;
     
     return nSubsidy;
 }
@@ -1928,9 +1932,9 @@ int64_t GetDevFundPayment(int nHeight, int64_t blockValue, bool isZGROWStake)
     {
         ret_val = 0;
     }
-    else if (nHeight > 1200)
+    else if (nHeight > Params().LAST_POW_BLOCK())
     {
-         ret_val = blockValue * 5 / 100;  // 5%
+         ret_val = blockValue * 7 / 100;  // 5%
     }
     
     return ret_val;
@@ -1952,18 +1956,29 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
             return 0;
     }
     
-    
     if (isZGROWStake)
     {
         ret = 0;
     }
-    else if (nHeight <= 30000)
+    else if (nHeight <= 15000)
     {
-        ret = blockValue * 55 / 100; //55% of the block reward
+        ret = blockValue * 70 / 100; //70% of the block reward
+    }
+    else if (nHeight <= 50000)
+    {
+        ret = blockValue * 75 / 100; //75% of the block reward
+    }
+    else if (nHeight <= 150000)
+    {
+        ret = blockValue * 80 / 100; //80% of the block reward
+    }
+    else if (nHeight <= 300000)
+    {
+        ret = blockValue * 85 / 100; //85% of the block reward
     }
     else
     {
-        ret = blockValue * 70 / 100; //70% of the block reward
+        ret = blockValue * 90 / 100; //90% of the block reward
     }
 
     return ret;
@@ -1991,7 +2006,7 @@ CBlockIndex *pindexBestForkTip = NULL, *pindexBestForkBase = NULL;
 void CheckForkWarningConditions()
 {
     AssertLockHeld(cs_main);
-    // Before we get past initial download, we cannot reliably alert about forks
+    // Before we get past initial download, we cannot reliably alert about forksg
     // (we assume we don't get stuck on a fork before the last checkpoint)
     if (IsInitialBlockDownload())
         return;

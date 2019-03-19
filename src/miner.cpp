@@ -111,6 +111,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
     CBlock* pblock = &pblocktemplate->block; // pointer for convenience
 
     // -regtest only: allow overriding block.nVersion with
+    CBlockIndex* pindexPrev;
+    {   // Don't keep cs_main locked
+        LOCK(cs_main);
+        pindexPrev = chainActive.Tip();
+    }
+    const int nHeight = pindexPrev->nHeight + 1;
+
     // -blockversion=N to test forking scenarios
     if (Params().MineBlocksOnDemand())
         pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
@@ -138,12 +145,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
     if (fProofOfStake) {
         boost::this_thread::interruption_point();
         pblock->nTime = GetAdjustedTime();
-        CBlockIndex* pindexPrev = chainActive.Tip();
         pblock->nBits = GetNextWorkRequired(pindexPrev, pblock);
         CMutableTransaction txCoinStake;
         int64_t nSearchTime = pblock->nTime; // search to current time
         bool fStakeFound = false;
-        if ((nSearchTime >= nLastCoinStakeSearchTime)) {
+        if (nSearchTime >= nLastCoinStakeSearchTime) {
             unsigned int nTxNewTime = 0;
             if (pwallet->CreateCoinStake(*pwallet, pblock->nBits, nSearchTime - nLastCoinStakeSearchTime, txCoinStake, nTxNewTime)) {
                 pblock->nTime = nTxNewTime;
@@ -155,8 +161,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
             nLastCoinStakeSearchTime = nSearchTime;
         }
 
-        if (!fStakeFound)
+        if (!fStakeFound) {
+            if (fDebug) LogPrintf("CreateNewBlock(): stake not found\n");
             return NULL;
+        }
     }
 
     // Largest block you're willing to create:
@@ -181,8 +189,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
     {
         LOCK2(cs_main, mempool.cs);
 
-        CBlockIndex* pindexPrev = chainActive.Tip();
-        const int nHeight = pindexPrev->nHeight + 1;
         CCoinsViewCache view(pcoinsTip);
 
         // Priority order to process transactions
@@ -430,8 +436,6 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
             //Make payee
             if (txNew.vout.size() > 1) {
                 pblock->payee = txNew.vout[1].scriptPubKey;
-            } else {
-                txNew.vout[0].nValue = GetBlockValue(nHeight) + nFees;
             }
         }
 
@@ -440,11 +444,13 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
-        pblock->vtx[0].vin[0].scriptSig = CScript() << nHeight << OP_0;
-
         if (!fProofOfStake) {
+            txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
             pblock->vtx[0] = txNew;
+            pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight);
             pblocktemplate->vTxFees[0] = -nFees;
+        } else {
+            pblock->vtx[0].vin[0].scriptSig = CScript() << nHeight << OP_0;
         }
 
         // Fill in header
@@ -455,8 +461,9 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         pblock->nNonce = 0;
 
         //Calculate the accumulator checkpoint only if the previous cached checkpoint need to be updated
+        if (fZerocoinActive) {
         uint256 nCheckpoint;
-        uint256 hashBlockLastAccumulated = chainActive[nHeight - (nHeight % 10) - 10]->GetBlockHash();
+        uint256 hashBlockLastAccumulated = nHeight >= 10 ? chainActive[nHeight - (nHeight % 10) - 10]->GetBlockHash() : chainActive[0]->GetBlockHash();
         if (nHeight >= pCheckpointCache.first || pCheckpointCache.second.first != hashBlockLastAccumulated) {
             //For the period before v2 activation, zGROW will be disabled and previous block's checkpoint is all that will be needed
             pCheckpointCache.second.second = pindexPrev->nAccumulatorCheckpoint;
@@ -471,6 +478,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                     // the block hash of the last block used in the accumulator checkpoint calc. This will handle reorg situations.
                     pCheckpointCache.second.first = hashBlockLastAccumulated;
                     pCheckpointCache.second.second = nCheckpoint;
+                }
                 }
             }
         }

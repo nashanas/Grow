@@ -75,15 +75,9 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet* 
         } else {
             //Masternode reward
             CTxDestination destMN;
-            int nIndexMN = wtx.vout.size() - 2;
-            if (ExtractDestination(wtx.vout[nIndexMN].scriptPubKey, destMN) && IsMine(*wallet, destMN)) {
-                isminetype mine = wallet->IsMine(wtx.vout[nIndexMN]);
-                sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
-                sub.type = TransactionRecord::MNReward;
-                sub.address = CBitcoinAddress(destMN).ToString();
-                sub.credit = wtx.vout[nIndexMN].nValue;
-            }
-            nIndexMN++;
+            int nIndexMN = wtx.vout.size() - 1;
+            if (wtx.vout.size() > 3)
+                nIndexMN = wtx.vout.size() - 2;
             if (ExtractDestination(wtx.vout[nIndexMN].scriptPubKey, destMN) && IsMine(*wallet, destMN)) {
                 isminetype mine = wallet->IsMine(wtx.vout[nIndexMN]);
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
@@ -97,7 +91,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet* 
     } else if (wtx.IsZerocoinSpend()) {
         //zerocoin spend outputs
         bool fFeeAssigned = false;
-        for (const CTxOut txout : wtx.vout) {
+        for (const CTxOut& txout : wtx.vout) {
             // change that was reminted as zerocoins
             if (txout.IsZerocoinMint()) {
                 // do not display record if this isn't from our wallet
