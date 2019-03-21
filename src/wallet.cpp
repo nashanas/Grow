@@ -2969,14 +2969,14 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         return false;
     }
 
+    if (GetAdjustedTime() - chainActive.Tip()->GetBlockTime() < 60)
+        MilliSleep(10000);
+
     if (listInputs.empty()) {
         if (fDebug) LogPrintf("%s: listInputs empty\n",  __func__);
         return false;
     }
-
-    if (GetAdjustedTime() - chainActive.Tip()->GetBlockTime() < 60)
-        MilliSleep(10000);
-
+    
     CAmount nCredit = 0;
     CScript scriptPubKeyKernel;
     bool fKernelFound = false;
