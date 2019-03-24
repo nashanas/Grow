@@ -2968,14 +2968,15 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         if (fDebug) LogPrintf("%s: selectStakeCoins failed\n", __func__);
         return false;
     }
+    
+    if (listInputs.empty()) {
+        if (fDebug) LogPrintf("%s: listInputs empty\n",  __func__);
+        MilliSleep(50000);
+        return false;
+    }
 
     if (GetAdjustedTime() - chainActive.Tip()->GetBlockTime() < 60)
         MilliSleep(10000);
-
-    if (listInputs.empty()) {
-        if (fDebug) LogPrintf("%s: listInputs empty\n",  __func__);
-        return false;
-    }
     
     CAmount nCredit = 0;
     CScript scriptPubKeyKernel;
@@ -4667,13 +4668,13 @@ bool CWallet::MintToTxIn(CZerocoinMint zerocoinSelected, int nSecurityLevel, con
             serializedCoinSpendChecking << spend;
         } catch (...) {
             receipt.SetStatus(_("Failed to deserialize"), ZGROW_BAD_SERIALIZATION);
-            return false;
+            return error("%s : Failed to deserialize", __func__);
         }
 
         libzerocoin::CoinSpend newSpendChecking(paramsCoin, paramsAccumulator, serializedCoinSpendChecking);
         if (!newSpendChecking.Verify(accumulator)) {
             receipt.SetStatus(_("The transaction did not verify"), ZGROW_BAD_SERIALIZATION);
-            return false;
+            return error("%s : The transaction did not verify", __func__);
         }
 
         if (IsSerialKnown(spend.getCoinSerialNumber())) {
