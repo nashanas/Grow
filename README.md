@@ -16,14 +16,11 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
 
 <tr><td>Website:</td><td> https://growhappy.world</td></tr>
 <tr><td>Explorer:</td><td> http://explorer.growhappy.world</td></tr>
-<tr><td>White Paper:</td><td> TBD</td></tr>
 <tr><td>Discord:</td><td> https://discord.gg/7efXmDm</td></tr>
 <tr><td>Twitter:</td><td> https://twitter.com/GROW_coin</td></tr>
-<tr><td>Facebook:</td><td> TBD</td></tr>
 <tr><td>Telegram:</td><td>https://t.me/GROWcoinOfficial</td></tr>
 <tr><td>Bitcointalk ANN:</td><td> TBD</td></tr>
 <tr><td>Github:</td><td> https://github.com/growaleaf/Grow</td></tr>
-<tr><td>CoinMarketCap</td><td>TBD</td></tr>
 </table>
 
 <table>
@@ -39,10 +36,9 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
 <tr><td>Algo</td><td>Quark</td></tr>
   <tr><td>Masternode Collateral</td><td>30,000 GROW</td></tr>
 <tr><td>Difficulty Retargeting</td><td>Every Block</td></tr>
-<tr><td>Max Coin Supply</td><td>50,000,000</td></tr>
-<tr><td>Premine in block 1</td><td>1,800,000*</td></tr>
-<tr><td>Full Premine</td><td>to handle snapshot*</td></tr>
-  <tr><td>Block Time</td><td>180 seconds</td></tr>
+<tr><td>Max Coin Supply</td><td>20,000,000</td></tr>
+<tr><td>Premine in block 1</td><td>2,000,000</td></tr>
+  <tr><td>Block Time</td><td>120 seconds</td></tr>
   <tr><td>Block Minting</td><td>79 confirmations</td></tr>
   <tr><td>Block Transactions</td><td>5 confirmations</td></tr>
   <tr><td>Minimum Stake Age</td><td>10 hours</td></tr>
@@ -54,23 +50,33 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
 <table>
 <th colspan=4>PoW Phase</th>
 <tr><th>Block Height</th><th>Reward Amount</th><th>Notes</th></tr>
-<tr><td>1</td><td>1,800,000 GROW</td><td>Initial Premine to Former Chain</td></tr>
-<tr><td>2-1000</td><td>10 GROW</td><td>Closed Mining</td></tr>
+<tr><td>1</td><td>2,000,000 GROW</td><td>Initial Premine to Former Chain</td></tr>
+<tr><td>2-300</td><td>10 GROW</td><td>Closed Mining</td></tr>
 <tr><th colspan=4>PoS Phase</th></tr>
 <tr><th>Block Height</th><th colspan=1>Reward Amount</th></tr>
-<tr><td>1,001-30,000</td><td>200 GROW</td></tr>
-  <tr><td>30,001-170,000</td><td>75 GROW</td></tr>
-  <tr><td>170,001-400,000</td><td>50 GROW</td></tr>
-    <tr><td>400,001-600,000</td><td>35 GROW</td></tr>
-  <tr><td>600,001-*</td><td>25 GROW</td></tr>
+<tr><td>301-15,000</td><td>12 GROW</td></tr>
+<tr><td>15,001-50,000</td><td>45 GROW</td></tr>
+<tr><td>50,001-150,000</td><td>35 GROW</td></tr>
+<tr><td>150,001-300,000</td><td>25 GROW</td></tr>
+   <tr><td>300,001-600,000</td><td>12 GROW</td></tr>
+   <tr><td>600,001-750,000</td><td>7.5 GROW</td></tr>
+   <tr><td>750,001-1,664,748</td><td>5 GROW</td></tr>
+<tr><td>1,664,749-*</td><td>0 (TX fee-based) GROW</td></tr>
 </table>
 
 ### PoS Rewards Breakdown
 
 <table>
 <tr><th>Block Height</th><th>Masternodes </th> <th> Stakers</th> <th> DEV fund</th>
-<tr><td>1,001-30,000</td><td>55% </td> <td> 40% </td> <td> 5% </td></tr>
-<tr><td>-30,001-*</td><td>70% </td> <td> 25% </td> <td> 5% </td></tr>
+<tr><td>301-15,000</td><td>70%</td></tr> <td>23% </td> <td> 7% </td></tr>
+<tr><td>15,001-50,000</td><td>75%</td></tr> <td>18% </td> <td> 7% </td></tr>
+<tr><td>50,001-150,000</td><td>80%</td></tr> <td>13% </td> <td> 7% </td></tr>
+<tr><td>150,001-300,000</td><td>85%</td></tr> <td>8% </td> <td> 7% </td></tr>
+<tr><td>300,001-600,000</td><td>90%</td></tr> <td>3% </td> <td> 7% </td></tr>
+<tr><td>600,001-750,000</td><td>90%</td></tr> <td>3% </td> <td> 7% </td></tr>
+<tr><td>750,001-1,664,748</td<td>90%</td></tr> <td>3% </td> <td> 7% </td></tr>
+<tr><td>1,664,749-*</td><td>0 (TX fee-based) GROW</td></tr><td>90%</td></tr> <td>10% </td> <td> 0% </td></tr>
+
 </table>
 
 
