@@ -68,14 +68,14 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
 
 <table>
   <tr><th>Block Height</th><th>Masternodes </th> <th> Stakers</th> <th> DEV fund</th></tr>
-<tr><td>301-15,000</td><td>70%</td></tr> <td>23% </td> <td> 7% </td></tr>
-<tr><td>15,001-50,000</td><td>75%</td></tr> <td>18% </td> <td> 7% </td></tr>
-<tr><td>50,001-150,000</td><td>80%</td></tr> <td>13% </td> <td> 7% </td></tr>
-<tr><td>150,001-300,000</td><td>85%</td></tr> <td>8% </td> <td> 7% </td></tr>
-<tr><td>300,001-600,000</td><td>90%</td></tr> <td>3% </td> <td> 7% </td></tr>
-<tr><td>600,001-750,000</td><td>90%</td></tr> <td>3% </td> <td> 7% </td></tr>
-<tr><td>750,001-1,664,748</td<td>90%</td></tr> <td>3% </td> <td> 7% </td></tr>
-<tr><td>1,664,749-*</td><td>0 (TX fee-based) GROW</td></tr><td>90%</td></tr> <td>10% </td> <td> 0% </td></tr>
+<tr><td>301-15,000</td><td>70%</td> <td>23% </td> <td> 7% </td></tr>
+<tr><td>15,001-50,000</td><td>75%</td> <td>18% </td> <td> 7% </td></tr>
+<tr><td>50,001-150,000</td><td>80%</td> <td>13% </td> <td> 7% </td></tr>
+<tr><td>150,001-300,000</td><td>85%</td> <td>8% </td> <td> 7% </td></tr>
+<tr><td>300,001-600,000</td><td>90%</td> <td>3% </td> <td> 7% </td></tr>
+<tr><td>600,001-750,000</td><td>90%</td> <td>3% </td> <td> 7% </td></tr>
+<tr><td>750,001-1,664,748</td<td>90%</td> <td>3% </td> <td> 7% </td></tr>
+<tr><td>1,664,749-*</td><td>0 (TX fee-based) GROW</td><td>90%</td></tr> <td>10% </td> <td> 0% </td></tr>
 
 </table>
 
