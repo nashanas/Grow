@@ -75,7 +75,7 @@ Grow is a cutting edge cryptocurrency, with many features not available in most 
 <tr><td>300,001-600,000</td><td>90%</td> <td>3% </td> <td> 7% </td></tr>
 <tr><td>600,001-750,000</td><td>90%</td> <td>3% </td> <td> 7% </td></tr>
   <tr><td>750,001-1,664,748</td><td>90%</td> <td>3% </td> <td> 7% </td></tr>
-<tr><td>1,664,749-*</td><td>0 (TX fee-based) GROW</td><td>90%</td></tr> <td>10% </td> <td> 0% </td></tr>
+<tr><td>1,664,749-*</td><td>90%</td> <td>10% </td> <td> 0% </td></tr>
 
 </table>
 
