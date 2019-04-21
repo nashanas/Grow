@@ -1,7 +1,6 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2018 The PIVX developers
-// Copyright (c) 2018 The GROW developers
+// Copyright (c) 2015-2018 The GROW developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,8 +18,8 @@
 #include "spork.h"
 #include "sync.h"
 #include "ui_interface.h"
-#include "wallet.h"
-#include "walletdb.h" // for BackupWallet
+#include "wallet/wallet.h"
+#include "wallet/walletdb.h" // for BackupWallet
 #include <stdint.h>
 
 #include <QDebug>
@@ -68,8 +67,6 @@ CAmount WalletModel::getBalance(const CCoinControl* coinControl) const
             if (out.fSpendable)
                 nBalance += out.tx->vout[out.i].nValue;
 
-        // cout << nBalance << endl;
-        // exit(0);
         return nBalance;
     }
 
@@ -158,6 +155,9 @@ void WalletModel::pollBalanceChanged()
         if (transactionTableModel) {
             transactionTableModel->updateConfirmations();
         }
+
+        // Address in receive tab may have been used
+        emit notifyReceiveAddressChanged();
     }
 }
 
@@ -760,10 +760,10 @@ void WalletModel::listLockedCoins(std::vector<COutPoint>& vOutpts)
 }
 
 
-void WalletModel::listZerocoinMints(std::set<CMintMeta>& setMints, bool fUnusedOnly, bool fMaturedOnly, bool fUpdateStatus)
+void WalletModel::listZerocoinMints(std::set<CMintMeta>& setMints, bool fUnusedOnly, bool fMaturedOnly, bool fUpdateStatus, bool fWrongSeed)
 {
     setMints.clear();
-    setMints = pwalletMain->zpivTracker->ListMints(fUnusedOnly, fMaturedOnly, fUpdateStatus);
+    setMints = pwalletMain->zgrowTracker->ListMints(fUnusedOnly, fMaturedOnly, fUpdateStatus, fWrongSeed);
 }
 
 void WalletModel::loadReceiveRequests(std::vector<std::string>& vReceiveRequests)
@@ -793,4 +793,9 @@ bool WalletModel::saveReceiveRequest(const std::string& sAddress, const int64_t 
 bool WalletModel::isMine(CBitcoinAddress address)
 {
     return IsMine(*wallet, address.Get());
+}
+
+bool WalletModel::isUsed(CBitcoinAddress address)
+{
+    return wallet->IsUsed(address);
 }

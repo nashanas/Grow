@@ -15,7 +15,6 @@
 #include "net.h"
 #include "sync.h"
 #include "util.h"
-#include <boost/lexical_cast.hpp>
 
 using namespace std;
 
@@ -50,9 +49,6 @@ extern std::vector<CFinalizedBudgetBroadcast> vecImmatureFinalizedBudgets;
 
 extern CBudgetManager budget;
 void DumpBudgets();
-
-// Define amount of blocks in budget payment cycle
-int GetBudgetPaymentCycleBlocks();
 
 //Check the collateral transaction for the budget proposal/finalized budget
 bool IsBudgetCollateralValid(uint256 nTxCollateralHash, uint256 nExpectedHash, std::string& strError, int64_t& nTime, int& nConf, bool fBudgetFinalization=false);
@@ -370,7 +366,7 @@ public:
     }
 
     //check to see if we should vote on this
-    void AutoCheck();
+    void CheckAndVote();
     //total grow paid out by this budget
     CAmount GetTotalPayout();
     //vote on this finalized budget as a masternode
@@ -517,16 +513,16 @@ public:
     int GetBlockCurrentCycle();
     int GetBlockEndCycle();
     double GetRatio();
-    int GetYeas();
-    int GetNays();
-    int GetAbstains();
+    int GetYeas() const;
+    int GetNays() const;
+    int GetAbstains() const;
     CAmount GetAmount() { return nAmount; }
     void SetAllotted(CAmount nAllotedIn) { nAlloted = nAllotedIn; }
     CAmount GetAllotted() { return nAlloted; }
 
     void CleanAndRemove(bool fSignatureCheck);
 
-    uint256 GetHash()
+    uint256 GetHash() const
     {
         CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
         ss << strProposalName;

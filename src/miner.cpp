@@ -21,15 +21,15 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #ifdef ENABLE_WALLET
-#include "wallet.h"
+#include "wallet/wallet.h"
 #endif
-#include "accumulators.h"
-#include "blocksignature.h"
-#include "invalid.h"
-#include "masternode-payments.h"
-#include "spork.h"
 #include "validationinterface.h"
-#include "zpivchain.h"
+#include "masternode-payments.h"
+#include "zgrow/accumulators.h"
+#include "blocksignature.h"
+#include "spork.h"
+#include "invalid.h"
+#include "zgrowchain.h"
 
 
 #include <boost/thread.hpp>
@@ -119,15 +119,17 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
     const int nHeight = pindexPrev->nHeight + 1;
 
     // -blockversion=N to test forking scenarios
-    if (Params().MineBlocksOnDemand())
-        pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
+    bool fZerocoinActive = nHeight >= Params().Zerocoin_StartHeight();
+    pblock->nVersion = 5;   // Supports CLTV activation
 
     // Make sure to create the correct block version after zerocoin is enabled
-    bool fZerocoinActive = GetAdjustedTime() >= Params().Zerocoin_StartTime();
+    if (Params().MineBlocksOnDemand()) {
     if (fZerocoinActive)
-        pblock->nVersion = 4;
+            pblock->nVersion = 5;
     else
         pblock->nVersion = 3;
+        pblock->nVersion = GetArg("-blockversion", pblock->nVersion);
+    }
 
     // Create coinbase tx
     CMutableTransaction txNew;
@@ -162,7 +164,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         }
 
         if (!fStakeFound) {
-            if (fDebug) LogPrintf("CreateNewBlock(): stake not found\n");
+            LogPrint("staking", "CreateNewBlock(): stake not found\n");
             return NULL;
         }
     }
@@ -438,6 +440,10 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
             //Make payee
             if (txNew.vout.size() > 1) {
                 pblock->payee = txNew.vout[1].scriptPubKey;
+            } else {
+                CAmount blockValue = nFees + GetBlockValue(pindexPrev->nHeight);
+                txNew.vout[0].nValue = blockValue;
+                txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
             }
         }
 
@@ -446,14 +452,11 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         LogPrintf("CreateNewBlock(): total size %u\n", nBlockSize);
 
         // Compute final coinbase transaction.
+        pblock->vtx[0].vin[0].scriptSig = CScript() << nHeight << OP_0;
         if (!fProofOfStake) {
-            txNew.vin[0].scriptSig = CScript() << nHeight << OP_0;
             pblock->vtx[0] = txNew;
-            pblock->vtx[0].vout[0].nValue = GetBlockValue(pindexPrev->nHeight);
             pblocktemplate->vTxFees[0] = -nFees;
-        } else {
-            pblock->vtx[0].vin[0].scriptSig = CScript() << nHeight << OP_0;
-        }
+         }
 
         // Fill in header
         pblock->hashPrevBlock = pindexPrev->GetBlockHash();
@@ -465,7 +468,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
         //Calculate the accumulator checkpoint only if the previous cached checkpoint need to be updated
         if (fZerocoinActive) {
         uint256 nCheckpoint;
-        uint256 hashBlockLastAccumulated = nHeight >= 10 ? chainActive[nHeight - (nHeight % 10) - 10]->GetBlockHash() : chainActive[0]->GetBlockHash();
+            uint256 hashBlockLastAccumulated = chainActive[nHeight - (nHeight % 10) - 10]->GetBlockHash();
         if (nHeight >= pCheckpointCache.first || pCheckpointCache.second.first != hashBlockLastAccumulated) {
             //For the period before v2 activation, zGROW will be disabled and previous block's checkpoint is all that will be needed
             pCheckpointCache.second.second = pindexPrev->nAccumulatorCheckpoint;
@@ -487,6 +490,30 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
         pblock->nAccumulatorCheckpoint = pCheckpointCache.second.second;
         pblocktemplate->vTxSigOps[0] = GetLegacySigOpCount(pblock->vtx[0]);
+        if (fProofOfStake) {
+            unsigned int nExtraNonce = 0;
+            IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
+            LogPrintf("CPUMiner : proof-of-stake block found %s \n", pblock->GetHash().ToString().c_str());
+            if (pblock->IsZerocoinStake()) {
+                //Find the key associated with the zerocoin that is being staked
+                libzerocoin::CoinSpend spend = TxInToZerocoinSpend(pblock->vtx[1].vin[0]);
+                CBigNum bnSerial = spend.getCoinSerialNumber();
+                CKey key;
+                if (!pwallet->GetZerocoinKey(bnSerial, key)) {
+                    LogPrintf("%s: failed to find zGROW with serial %s, unable to sign block\n", __func__, bnSerial.GetHex());
+                    return NULL;
+                }
+
+                //Sign block with the zGROW key
+                if (!SignBlockWithKey(*pblock, key)) {
+                    LogPrintf("BitcoinMiner(): Signing new block with zGROW key failed \n");
+                    return NULL;
+                }
+            } else if (!SignBlock(*pblock, *pwallet)) {
+                LogPrintf("BitcoinMiner(): Signing new block with UTXO key failed \n");
+                return NULL;
+            }
+        }
 
         CValidationState state;
         if (!TestBlockValidity(state, *pblock, pindexPrev, false, false)) {
@@ -567,8 +594,10 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     // Process this block the same as if we had received it from another node
     CValidationState state;
     if (!ProcessNewBlock(state, NULL, pblock)) {
-        if (pblock->IsZerocoinStake())
-            pwalletMain->zpivTracker->RemovePending(pblock->vtx[1].GetHash());
+        if (pblock->IsZerocoinStake()) {
+            pwalletMain->zgrowTracker->RemovePending(pblock->vtx[1].GetHash());
+            pwalletMain->zgrowTracker->ListMints(true, true, true); //update the state
+        }
         return error("GROWMiner : ProcessNewBlock, block not accepted");
     }
 
@@ -595,6 +624,7 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
+    bool fLastLoopOrphan = false;
     while (fGenerateBitcoins || fProofOfStake) {
         if (fProofOfStake) {
             //control the amount of times the client will check for mintable coins
@@ -624,7 +654,7 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
                     continue;
             }
 
-            if (mapHashedBlocks.count(chainActive.Tip()->nHeight)) //search our map of hashed blocks, see if bestblock has been hashed yet
+            if (mapHashedBlocks.count(chainActive.Tip()->nHeight) && !fLastLoopOrphan) //search our map of hashed blocks, see if bestblock has been hashed yet
             {
                 if (GetTime() - mapHashedBlocks[chainActive.Tip()->nHeight] < max(pwallet->nHashInterval, (unsigned int)1)) // wait half of the nHashDrift with max wait of 3 minutes
                 {
@@ -674,7 +704,10 @@ void BitcoinMiner(CWallet* pwallet, bool fProofOfStake)
 
             LogPrintf("CPUMiner : proof-of-stake block was signed %s \n", pblock->GetHash().ToString().c_str());
             SetThreadPriority(THREAD_PRIORITY_NORMAL);
-            ProcessBlockFound(pblock, *pwallet, reservekey);
+            if (!ProcessBlockFound(pblock, *pwallet, reservekey)) {
+                fLastLoopOrphan = true;
+                continue;
+            }
             SetThreadPriority(THREAD_PRIORITY_LOWEST);
 
             continue;

@@ -49,18 +49,17 @@ PublicCoin::PublicCoin(const ZerocoinParams* p, const CBigNum& coin, const CoinD
 bool PublicCoin::validate() const
 {
     if (this->params->accumulatorParams.minCoinValue >= value) {
-        cout << "PublicCoin::validate value is too low\n";
-        return false;
+        return error("%s: ERROR: PublicCoin::validate value is too low: %s", __func__, value.GetDec());
     }
 
     if (value > this->params->accumulatorParams.maxCoinValue) {
-        cout << "PublicCoin::validate value is too high\n";
-        return false;
+        return error("%s: ERROR: PublicCoin::validate value is too high, max: %s, received: %s",
+                __func__, this->params->accumulatorParams.maxCoinValue, value.GetDec());
     }
 
     if (!value.isPrime(params->zkp_iterations)) {
-        cout << "PublicCoin::validate value is not prime\n";
-        return false;
+        return error("%s: ERROR: PublicCoin::validate value is not prime. Value: %s, Iterations: %d",
+                __func__, value.GetDec(), params->zkp_iterations);
     }
 
     return true;
@@ -254,12 +253,17 @@ void PrivateCoin::mintCoinFast(const CoinDenomination denomination) {
 
 int ExtractVersionFromSerial(const CBigNum& bnSerial)
 {
+    try {
 	//Serial is marked as v2 only if the first byte is 0xF
 	uint256 nMark = bnSerial.getuint256() >> (256 - PrivateCoin::V2_BITSHIFT);
 	if (nMark == 0xf)
 		return PrivateCoin::PUBKEY_VERSION;
+    }catch (std::range_error &e){
 
 	return 2;
+    }
+
+    return 1;
 }
 
 //Remove the first four bits for V2 serials
@@ -282,8 +286,11 @@ bool IsValidSerial(const ZerocoinParams* params, const CBigNum& bnSerial)
         return bnSerial < params->coinCommitmentGroup.groupOrder;
 
     //If V2, the serial is marked with 0xF in the first 4 bits. This is removed for the actual serial.
-    CBigNum bnAdjustedSerial = GetAdjustedSerial(bnSerial);
-    return bnAdjustedSerial > 0 && bnAdjustedSerial < params->coinCommitmentGroup.groupOrder;
+    return bnSerial.bitSize() <= 256;
 }
 
+bool IsValidCommitmentToCoinRange(const ZerocoinParams* params, const CBigNum& bnCommitment)
+{
+    return bnCommitment > CBigNum(0) && bnCommitment < params->serialNumberSoKCommitmentGroup.modulus;
+}
 } /* namespace libzerocoin */

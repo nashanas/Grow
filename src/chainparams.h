@@ -95,6 +95,8 @@ public:
     virtual const Checkpoints::CCheckpointData& Checkpoints() const = 0;
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
     CAmount StakeInputMinimal() const { return nStakeInputMinimal; }
+    /** Return the number of blocks in a budget cycle */
+    int GetBudgetCycleBlocks() const { return nBudgetCycleBlocks; }
 
     /** Spork key and Masternode Handling **/
     std::string SporkKey() const { return strSporkKey; }
@@ -117,8 +119,7 @@ public:
     int Zerocoin_DefaultSpendSecurity() const { return nDefaultSecurityLevel; }
     int Zerocoin_HeaderVersion() const { return nZerocoinHeaderVersion; }
     int Zerocoin_RequiredStakeDepth() const { return nZerocoinRequiredStakeDepth; }
-    int Zerocoin_AccumulationStartHeight() const { return nZerocoinAccumulationStartHeight; }
-    
+
     /** Height or Time Based Activations **/
     int ModifierUpgradeBlock() const { return nModifierUpdateBlock; }
     int LAST_POW_BLOCK() const { return nLastPOWBlock; }
@@ -171,6 +172,7 @@ protected:
     bool fTestnetToBeDeprecatedFieldRPC;
     bool fHeadersFirstSyncingActive;
     int nPoolMaxTransactions;
+    int nBudgetCycleBlocks;
     std::string strSporkKey;
     std::string strSporkKeyOld;
     int64_t nEnforceNewSporkKey;
@@ -187,7 +189,6 @@ protected:
     int nZerocoinHeaderVersion;
     int64_t nBudget_Fee_Confirmations;
     int nZerocoinStartHeight;
-    int nZerocoinAccumulationStartHeight;
     int nZerocoinStartTime;
     int nZerocoinRequiredStakeDepth;
 

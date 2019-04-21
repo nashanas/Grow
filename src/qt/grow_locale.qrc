@@ -6,6 +6,7 @@
         <file alias="da">locale/grow_da.qm</file>
         <file alias="de">locale/grow_de.qm</file>
         <file alias="en">locale/grow_en.qm</file>
+        <file alias="en_GB">locale/grow_en_GB.qm</file>
         <file alias="en_US">locale/grow_en_US.qm</file>
         <file alias="eo">locale/grow_eo.qm</file>
         <file alias="es">locale/grow_es.qm</file>

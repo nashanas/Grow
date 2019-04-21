@@ -1,10 +1,13 @@
-// Copyright (c) 2017-2018 The PIVX developers
-// Copyright (c) 2018 The GROW developers
+// Copyright (c) 2017-2018 The GROW developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef GROW_STAKEINPUT_H
 #define GROW_STAKEINPUT_H
+
+#include "chain.h"
+#include "streams.h"
+#include "uint256.h"
 
 class CKeyStore;
 class CWallet;
@@ -25,13 +28,14 @@ public:
     virtual bool GetModifier(uint64_t& nStakeModifier) = 0;
     virtual bool IsZGROW() = 0;
     virtual CDataStream GetUniqueness() = 0;
+    virtual uint256 GetSerialHash() const = 0;
 };
 
 
 // zGROWStake can take two forms
 // 1) the stake candidate, which is a zcmint that is attempted to be staked
-// 2) a staked zpiv, which is a zcspend that has successfully staked
-class CZCstlStake : public CStakeInput
+// 2) a staked zgrow, which is a zcspend that has successfully staked
+class CZGrowStake : public CStakeInput
 {
 private:
     uint32_t nChecksum;
@@ -40,7 +44,7 @@ private:
     uint256 hashSerial;
 
 public:
-    explicit CZCstlStake(libzerocoin::CoinDenomination denom, const uint256& hashSerial)
+    explicit CZGrowStake(libzerocoin::CoinDenomination denom, const uint256& hashSerial)
     {
         this->denom = denom;
         this->hashSerial = hashSerial;
@@ -48,7 +52,7 @@ public:
         fMint = true;
     }
 
-    explicit CZCstlStake(const libzerocoin::CoinSpend& spend);
+    explicit CZGrowStake(const libzerocoin::CoinSpend& spend);
 
     CBlockIndex* GetIndexFrom() override;
     bool GetTxFrom(CTransaction& tx) override;
@@ -59,6 +63,7 @@ public:
     bool CreateTxOuts(CWallet* pwallet, vector<CTxOut>& vout, CAmount nTotal) override;
     bool MarkSpent(CWallet* pwallet, const uint256& txid);
     bool IsZGROW() override { return true; }
+    uint256 GetSerialHash() const override { return hashSerial; }
     int GetChecksumHeightFromMint();
     int GetChecksumHeightFromSpend();
     uint32_t GetChecksum();
@@ -85,6 +90,7 @@ public:
     bool CreateTxIn(CWallet* pwallet, CTxIn& txIn, uint256 hashTxOut = 0) override;
     bool CreateTxOuts(CWallet* pwallet, vector<CTxOut>& vout, CAmount nTotal) override;
     bool IsZGROW() override { return false; }
+    uint256 GetSerialHash() const override { return uint256(0); }
 };
 
 

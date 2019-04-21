@@ -5150,8 +5150,8 @@ O mint las denominaciones más altas (por lo tanto, se necesitan menos datos) o 
         <translation>Debes especificar un masternodeprivkey en la configuración. Por favor mira la documentación por ayuda.</translation>
     </message>
     <message>
-        <source>(36801 could be used only on mainnet)</source>
-        <translation>(36801 puede ser utilizado solo en mainnet)</translation>
+        <source>(36800 could be used only on mainnet)</source>
+        <translation>(36800 puede ser utilizado solo en mainnet)</translation>
     </message>
     <message>
         <source>(default: %s)</source>
@@ -5162,8 +5162,8 @@ O mint las denominaciones más altas (por lo tanto, se necesitan menos datos) o 
         <translation>(predeterminado: 1)</translation>
     </message>
     <message>
-        <source>(must be 36801 for mainnet)</source>
-        <translation>(debe ser 36801 para un mainnet)</translation>
+        <source>(must be 36800 for mainnet)</source>
+        <translation>(debe ser 36800 para un mainnet)</translation>
     </message>
     <message>
         <source>Accept command line and JSON-RPC commands</source>

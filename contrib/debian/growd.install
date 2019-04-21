@@ -1,2 +1,3 @@
 usr/local/bin/growd usr/bin
 usr/local/bin/grow-cli usr/bin
+debian/examples/grow.conf etc/grow

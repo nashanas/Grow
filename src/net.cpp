@@ -1,8 +1,7 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2018 The PIVX developers
-// Copyright (c) 2018 The GROW developers
+// Copyright (c) 2015-2018 The GROW developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +19,10 @@
 #include "primitives/transaction.h"
 #include "scheduler.h"
 #include "ui_interface.h"
-#include "wallet.h"
+
+#ifdef ENABLE_WALLET
+#include "wallet/wallet.h"
+#endif // ENABLE_WALLET
 
 #ifdef WIN32
 #include <string.h>
@@ -86,6 +88,7 @@ static std::vector<ListenSocket> vhListenSocket;
 CAddrMan addrman;
 int nMaxConnections = 125;
 bool fAddressesInitialized = false;
+std::string strSubVersion;
 
 vector<CNode*> vNodes;
 CCriticalSection cs_vNodes;
@@ -410,7 +413,7 @@ CNode* ConnectNode(CAddress addrConnect, const char* pszDest, bool obfuScationMa
         pszDest ? 0.0 : (double)(GetAdjustedTime() - addrConnect.nTime) / 3600.0);
 
     // Connect
-    SOCKET hSocket;
+    SOCKET hSocket = INVALID_SOCKET;;
     bool proxyConnectionFailed = false;
     if (pszDest ? ConnectSocketByName(addrConnect, hSocket, pszDest, Params().GetDefaultPort(), nConnectTimeout, &proxyConnectionFailed) :
                   ConnectSocket(addrConnect, hSocket, nConnectTimeout, &proxyConnectionFailed)) {
@@ -484,7 +487,7 @@ void CNode::PushVersion()
     else
         LogPrint("net", "send version message: version %d, blocks=%d, us=%s, peer=%d\n", PROTOCOL_VERSION, nBestHeight, addrMe.ToString(), id);
     PushMessage("version", PROTOCOL_VERSION, nLocalServices, nTime, addrYou, addrMe,
-        nLocalHostNonce, FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, std::vector<string>()), nBestHeight, true);
+        nLocalHostNonce, strSubVersion, nBestHeight, true);
 }
 
 
@@ -1362,7 +1365,7 @@ void ThreadOpenConnections()
 
         int nTries = 0;
         while (true) {
-            CAddress addr = addrman.Select();
+            CAddrInfo addr = addrman.Select();
 
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
@@ -1556,6 +1559,7 @@ void ThreadMessageHandler()
     }
 }
 
+#ifdef ENABLE_WALLET
 // ppcoin: stake minter thread
 void static ThreadStakeMinter()
 {
@@ -1566,12 +1570,13 @@ void static ThreadStakeMinter()
         BitcoinMiner(pwallet, true);
         boost::this_thread::interruption_point();
     } catch (std::exception& e) {
-        LogPrintf("%s exception: %s \n", __func__, e.what());
+        LogPrintf("ThreadStakeMinter() exception \n");
     } catch (...) {
         LogPrintf("ThreadStakeMinter() error \n");
     }
     LogPrintf("ThreadStakeMinter exiting,\n");
 }
+#endif // ENABLE_WALLET
 
 bool BindListenPort(const CService& addrBind, string& strError, bool fWhitelisted)
 {
@@ -1725,7 +1730,7 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     CNode::SetBannedSetDirty(false); //no need to write down just read or nonexistent data
     CNode::SweepBanned(); //sweap out unused entries
 
-    // Initialize random numbers. Even when rand() is only usable for trivial use-cases most nodes should have a different 
+    // Initialize random numbers. Even when rand() is only usable for trivial use-cases most nodes should have a different
     // seed after all the file-IO done at this point. Should be good enough even when nodes are started via scripts.
     srand(time(NULL));
 
@@ -1771,9 +1776,11 @@ void StartNode(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Dump network addresses
     scheduler.scheduleEvery(&DumpData, DUMP_ADDRESSES_INTERVAL);
 
+#ifdef ENABLE_WALLET
     // ppcoin:mint proof-of-stake blocks in the background
-    if (GetBoolArg("-growstake", true))
+    if (GetBoolArg("-staking", true) && pwalletMain)
         threadGroup.create_thread(boost::bind(&TraceThread<void (*)()>, "stakemint", &ThreadStakeMinter));
+#endif // ENABLE_WALLET
 }
 
 bool StopNode()
@@ -1890,7 +1897,7 @@ void RelayInv(CInv& inv)
 {
     LOCK(cs_vNodes);
     BOOST_FOREACH (CNode* pnode, vNodes){
-    		if((pnode->nServices==NODE_BLOOM_WITHOUT_MN) && inv.IsMasterNodeType())continue;
+        if((pnode->nServices == NODE_BLOOM_WITHOUT_MN || pnode->nServices == NODE_BLOOM_LIGHT_ZC) && inv.IsMasterNodeType())continue;
         if (pnode->nVersion >= ActiveProtocol())
             pnode->PushInventory(inv);
     }

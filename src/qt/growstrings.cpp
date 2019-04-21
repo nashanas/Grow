@@ -58,6 +58,8 @@ QT_TRANSLATE_NOOP("grow-core", ""
 QT_TRANSLATE_NOOP("grow-core", ""
 "Enable SwiftX, show confirmations for locked transactions (bool, default: %s)"),
 QT_TRANSLATE_NOOP("grow-core", ""
+"Enable automatic Zerocoin minting from specific addresses (0-1, default: %u)"),
+QT_TRANSLATE_NOOP("grow-core", ""
 "Enable automatic wallet backups triggered after each zGROW minting (0-1, "
 "default: %u)"),
 QT_TRANSLATE_NOOP("grow-core", ""
@@ -134,8 +136,13 @@ QT_TRANSLATE_NOOP("grow-core", ""
 "Maintain a full transaction index, used by the getrawtransaction rpc call "
 "(default: %u)"),
 QT_TRANSLATE_NOOP("grow-core", ""
+"Maximum average size of an index occurrence in the block spam filter "
+"(default: %u)"),
+QT_TRANSLATE_NOOP("grow-core", ""
 "Maximum size of data in data carrier transactions we relay and mine "
 "(default: %u)"),
+QT_TRANSLATE_NOOP("grow-core", ""
+"Maximum size of the list of indexes in the block spam filter (default: %u)"),
 QT_TRANSLATE_NOOP("grow-core", ""
 "Maximum total fees to use in a single wallet transaction, setting too low "
 "may abort large transactions (default: %s)"),
@@ -162,6 +169,9 @@ QT_TRANSLATE_NOOP("grow-core", ""
 QT_TRANSLATE_NOOP("grow-core", ""
 "Set maximum size of high-priority/low-fee transactions in bytes (default: %d)"),
 QT_TRANSLATE_NOOP("grow-core", ""
+"Set the number of included blocks to precompute per cycle. (minimum: %d) "
+"(maximum: %d) (default: %d)"),
+QT_TRANSLATE_NOOP("grow-core", ""
 "Set the number of script verification threads (%u to %d, 0 = auto, <0 = "
 "leave that many cores free, default: %d)"),
 QT_TRANSLATE_NOOP("grow-core", ""
@@ -185,12 +195,20 @@ QT_TRANSLATE_NOOP("grow-core", ""
 "SwiftX requires inputs with at least 6 confirmations, you might need to wait "
 "a few minutes and try again."),
 QT_TRANSLATE_NOOP("grow-core", ""
+"The block database contains a block which appears to be from the future. "
+"This may be due to your computer's date and time being set incorrectly. Only "
+"rebuild the block database if you are sure that your computer's date and "
+"time are correct"),
+QT_TRANSLATE_NOOP("grow-core", ""
 "This is a pre-release test build - use at your own risk - do not use for "
 "staking or merchant applications!"),
 QT_TRANSLATE_NOOP("grow-core", ""
 "This product includes software developed by the OpenSSL Project for use in "
 "the OpenSSL Toolkit <https://www.openssl.org/> and cryptographic software "
 "written by Eric Young and UPnP software written by Thomas Bernard."),
+QT_TRANSLATE_NOOP("grow-core", ""
+"Total length of network version string (%i) exceeds maximum length (%i). "
+"Reduce the number or size of uacomments."),
 QT_TRANSLATE_NOOP("grow-core", ""
 "Unable to bind to %s on this computer. Grow Core is probably already running."),
 QT_TRANSLATE_NOOP("grow-core", ""
@@ -235,18 +253,20 @@ QT_TRANSLATE_NOOP("grow-core", ""
 QT_TRANSLATE_NOOP("grow-core", ""
 "You must specify a masternodeprivkey in the configuration. Please see "
 "documentation for help."),
-QT_TRANSLATE_NOOP("grow-core", "(36801 could be used only on mainnet)"),
+QT_TRANSLATE_NOOP("grow-core", "(36800 could be used only on mainnet)"),
 QT_TRANSLATE_NOOP("grow-core", "(default: %s)"),
 QT_TRANSLATE_NOOP("grow-core", "(default: 1)"),
-QT_TRANSLATE_NOOP("grow-core", "(must be 36801 for mainnet)"),
+QT_TRANSLATE_NOOP("grow-core", "(must be 36800 for mainnet)"),
 QT_TRANSLATE_NOOP("grow-core", "<category> can be:"),
 QT_TRANSLATE_NOOP("grow-core", "Accept command line and JSON-RPC commands"),
 QT_TRANSLATE_NOOP("grow-core", "Accept connections from outside (default: 1 if no -proxy or -connect)"),
 QT_TRANSLATE_NOOP("grow-core", "Accept public REST requests (default: %u)"),
 QT_TRANSLATE_NOOP("grow-core", "Add a node to connect to and attempt to keep the connection open"),
+QT_TRANSLATE_NOOP("grow-core", "Adding Wrapped Serials supply..."),
 QT_TRANSLATE_NOOP("grow-core", "Allow DNS lookups for -addnode, -seednode and -connect"),
 QT_TRANSLATE_NOOP("grow-core", "Already have that input."),
 QT_TRANSLATE_NOOP("grow-core", "Always query for peer addresses via DNS lookup (default: %u)"),
+QT_TRANSLATE_NOOP("grow-core", "Append comment to the user agent string"),
 QT_TRANSLATE_NOOP("grow-core", "Attempt to force blockchain corruption recovery"),
 QT_TRANSLATE_NOOP("grow-core", "Attempt to recover private keys from a corrupt wallet.dat"),
 QT_TRANSLATE_NOOP("grow-core", "Automatically create Tor hidden service (default: %d)"),
@@ -261,6 +281,7 @@ QT_TRANSLATE_NOOP("grow-core", "Cannot resolve -externalip address: '%s'"),
 QT_TRANSLATE_NOOP("grow-core", "Cannot resolve -whitebind address: '%s'"),
 QT_TRANSLATE_NOOP("grow-core", "Cannot write default address"),
 QT_TRANSLATE_NOOP("grow-core", "CoinSpend: Accumulator witness does not verify"),
+QT_TRANSLATE_NOOP("grow-core", "CoinSpend: failed check"),
 QT_TRANSLATE_NOOP("grow-core", "Collateral not valid."),
 QT_TRANSLATE_NOOP("grow-core", "Connect only to the specified node(s)"),
 QT_TRANSLATE_NOOP("grow-core", "Connect through SOCKS5 proxy"),
@@ -269,9 +290,9 @@ QT_TRANSLATE_NOOP("grow-core", "Connection options:"),
 QT_TRANSLATE_NOOP("grow-core", "Copyright (C) 2009-%i The Bitcoin Core Developers"),
 QT_TRANSLATE_NOOP("grow-core", "Copyright (C) 2014-%i The Dash Core Developers"),
 QT_TRANSLATE_NOOP("grow-core", "Copyright (C) 2015-%i The PIVX Core Developers"),
-QT_TRANSLATE_NOOP("grow-core", "Copyright (C) %i The Grow Core Developers"),
 QT_TRANSLATE_NOOP("grow-core", "Corrupted block database detected"),
 QT_TRANSLATE_NOOP("grow-core", "Could not parse masternode.conf"),
+QT_TRANSLATE_NOOP("grow-core", "Couldn't generate the accumulator witness"),
 QT_TRANSLATE_NOOP("grow-core", "Debugging/Testing options:"),
 QT_TRANSLATE_NOOP("grow-core", "Delete blockchain folders and resync from scratch"),
 QT_TRANSLATE_NOOP("grow-core", "Disable OS notifications for incoming transactions (default: %u)"),
@@ -283,6 +304,7 @@ QT_TRANSLATE_NOOP("grow-core", "Do not load the wallet and disable wallet RPC ca
 QT_TRANSLATE_NOOP("grow-core", "Do you want to rebuild the block database now?"),
 QT_TRANSLATE_NOOP("grow-core", "Done loading"),
 QT_TRANSLATE_NOOP("grow-core", "Enable automatic Zerocoin minting (0-1, default: %u)"),
+QT_TRANSLATE_NOOP("grow-core", "Enable precomputation of zGROW spends and stakes (0-1, default %u)"),
 QT_TRANSLATE_NOOP("grow-core", "Enable publish hash block in <address>"),
 QT_TRANSLATE_NOOP("grow-core", "Enable publish hash transaction (locked via SwiftX) in <address>"),
 QT_TRANSLATE_NOOP("grow-core", "Enable publish hash transaction in <address>"),
@@ -314,7 +336,6 @@ QT_TRANSLATE_NOOP("grow-core", "Error: Wallet locked, unable to create transacti
 QT_TRANSLATE_NOOP("grow-core", "Error: You already have pending entries in the Obfuscation pool"),
 QT_TRANSLATE_NOOP("grow-core", "Failed to calculate accumulator checkpoint"),
 QT_TRANSLATE_NOOP("grow-core", "Failed to create mint"),
-QT_TRANSLATE_NOOP("grow-core", "Failed to deserialize"),
 QT_TRANSLATE_NOOP("grow-core", "Failed to find Zerocoins in wallet.dat"),
 QT_TRANSLATE_NOOP("grow-core", "Failed to listen on any port. Use -listen=0 if you want this."),
 QT_TRANSLATE_NOOP("grow-core", "Failed to parse host:port string"),
@@ -410,6 +431,9 @@ QT_TRANSLATE_NOOP("grow-core", "RPC server options:"),
 QT_TRANSLATE_NOOP("grow-core", "Randomly drop 1 of every <n> network messages"),
 QT_TRANSLATE_NOOP("grow-core", "Randomly fuzz 1 of every <n> network messages"),
 QT_TRANSLATE_NOOP("grow-core", "Rebuild block chain index from current blk000??.dat files"),
+QT_TRANSLATE_NOOP("grow-core", "Recalculating GROW supply..."),
+QT_TRANSLATE_NOOP("grow-core", "Recalculating minted ZGROW..."),
+QT_TRANSLATE_NOOP("grow-core", "Recalculating spent ZGROW..."),
 QT_TRANSLATE_NOOP("grow-core", "Receive and display P2P network alerts (default: %u)"),
 QT_TRANSLATE_NOOP("grow-core", "Reindex the GROW and zGROW money supply statistics"),
 QT_TRANSLATE_NOOP("grow-core", "Reindex the accumulator database"),
@@ -455,6 +479,7 @@ QT_TRANSLATE_NOOP("grow-core", "Stop running after importing blocks from disk (d
 QT_TRANSLATE_NOOP("grow-core", "Submitted following entries to masternode: %u / %d"),
 QT_TRANSLATE_NOOP("grow-core", "Submitted to masternode, waiting for more entries ( %u / %d ) %s"),
 QT_TRANSLATE_NOOP("grow-core", "Submitted to masternode, waiting in queue %s"),
+QT_TRANSLATE_NOOP("grow-core", "Support the zerocoin light node protocol (default: %u)"),
 QT_TRANSLATE_NOOP("grow-core", "SwiftX options:"),
 QT_TRANSLATE_NOOP("grow-core", "Synchronization failed"),
 QT_TRANSLATE_NOOP("grow-core", "Synchronization finished"),
@@ -465,8 +490,6 @@ QT_TRANSLATE_NOOP("grow-core", "Synchronizing masternodes..."),
 QT_TRANSLATE_NOOP("grow-core", "Synchronizing sporks..."),
 QT_TRANSLATE_NOOP("grow-core", "Syncing zGROW wallet..."),
 QT_TRANSLATE_NOOP("grow-core", "The coin spend has been used"),
-QT_TRANSLATE_NOOP("grow-core", "The new spend coin transaction did not verify"),
-QT_TRANSLATE_NOOP("grow-core", "The selected mint coin is an invalid coin"),
 QT_TRANSLATE_NOOP("grow-core", "The transaction did not verify"),
 QT_TRANSLATE_NOOP("grow-core", "This help message"),
 QT_TRANSLATE_NOOP("grow-core", "This is experimental software."),
@@ -486,7 +509,6 @@ QT_TRANSLATE_NOOP("grow-core", "Transaction not valid."),
 QT_TRANSLATE_NOOP("grow-core", "Transaction too large for fee policy"),
 QT_TRANSLATE_NOOP("grow-core", "Transaction too large"),
 QT_TRANSLATE_NOOP("grow-core", "Transmitting final transaction."),
-QT_TRANSLATE_NOOP("grow-core", "Try to spend with a higher security level to include more coins"),
 QT_TRANSLATE_NOOP("grow-core", "Trying to spend an already spent serial #, try again."),
 QT_TRANSLATE_NOOP("grow-core", "Unable to bind to %s on this computer (bind returned error %s)"),
 QT_TRANSLATE_NOOP("grow-core", "Unable to find transaction containing mint"),
@@ -498,13 +520,14 @@ QT_TRANSLATE_NOOP("grow-core", "Upgrade wallet to latest format"),
 QT_TRANSLATE_NOOP("grow-core", "Use UPnP to map the listening port (default: %u)"),
 QT_TRANSLATE_NOOP("grow-core", "Use UPnP to map the listening port (default: 1 when listening)"),
 QT_TRANSLATE_NOOP("grow-core", "Use a custom max chain reorganization depth (default: %u)"),
+QT_TRANSLATE_NOOP("grow-core", "Use block spam filter (default: %u)"),
 QT_TRANSLATE_NOOP("grow-core", "Use the test network"),
+QT_TRANSLATE_NOOP("grow-core", "User Agent comment (%s) contains unsafe characters."),
 QT_TRANSLATE_NOOP("grow-core", "Username for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("grow-core", "Value is below the smallest available denomination (= 1) of zGROW"),
 QT_TRANSLATE_NOOP("grow-core", "Value more than Obfuscation pool maximum allows."),
 QT_TRANSLATE_NOOP("grow-core", "Verifying blocks..."),
 QT_TRANSLATE_NOOP("grow-core", "Verifying wallet..."),
-QT_TRANSLATE_NOOP("grow-core", "Version 1 zGROW require a security level of 100 to successfully spend."),
 QT_TRANSLATE_NOOP("grow-core", "Wallet %s resides outside data directory %s"),
 QT_TRANSLATE_NOOP("grow-core", "Wallet is locked."),
 QT_TRANSLATE_NOOP("grow-core", "Wallet needed to be rewritten: restart Grow Core to complete"),
@@ -522,6 +545,7 @@ QT_TRANSLATE_NOOP("grow-core", "Your transaction was accepted into the pool!"),
 QT_TRANSLATE_NOOP("grow-core", "Zapping all transactions from wallet..."),
 QT_TRANSLATE_NOOP("grow-core", "ZeroMQ notification options:"),
 QT_TRANSLATE_NOOP("grow-core", "Zerocoin options:"),
+QT_TRANSLATE_NOOP("grow-core", "could not get lock on cs_spendcache"),
 QT_TRANSLATE_NOOP("grow-core", "isValid(): Invalid -proxy address or hostname: '%s'"),
 QT_TRANSLATE_NOOP("grow-core", "on startup"),
 QT_TRANSLATE_NOOP("grow-core", "wallet.dat corrupt, salvage failed"),

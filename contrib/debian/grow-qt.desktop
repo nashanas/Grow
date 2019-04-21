@@ -1,6 +1,6 @@
 [Desktop Entry]
-Encoding=UTF-8
-Name=GROW
+Version=1.0
+Name=GROW Core
 Comment=GROW P2P Cryptocurrency
 Comment[fr]=GROW, monnaie virtuelle cryptographique pair à pair
 Comment[tr]=GROW, eşten eşe kriptografik sanal para birimi
@@ -10,3 +10,4 @@ Type=Application
 Icon=grow128
 MimeType=x-scheme-handler/grow;
 Categories=Office;Finance;
+StartupWMClass=Grow-qt

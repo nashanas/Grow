@@ -1,11 +1,10 @@
-// Copyright (c) 2017-2018 The PIVX developers
-// Copyright (c) 2018 The GROW developers
+// Copyright (c) 2017-2018 The GROW developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "blocksignature.h"
 #include "main.h"
-#include "zpivchain.h"
+#include "zgrowchain.h"
 
 bool SignBlockWithKey(CBlock& block, const CKey& key)
 {
@@ -85,7 +84,7 @@ bool CheckBlockSignature(const CBlock& block)
     }
 
     if (!pubkey.IsValid())
-        return error("%s: invalid pubkey %s", __func__, pubkey.GetHex());
+        return error("%s: invalid pubkey %s", __func__, HexStr(pubkey));
 
     return pubkey.Verify(block.GetHash(), block.vchBlockSig);
 }

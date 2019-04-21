@@ -7,8 +7,8 @@ COIN_DAEMON='/root/growd'
 COIN_CLI='/root/grow-cli'
 COIN_REPO='https://github.com/growaleaf/CastleMN/releases/download/v1.0.0/grow-1.0.0-ubuntu18.04-linux-daemon.zip'
 COIN_NAME='GROW'
-COIN_PORT=36801
-RPC_PORT=36801
+COIN_PORT=36800
+RPC_PORT=36800
 
 
 NODEIP=$(curl -s4 icanhazip.com)

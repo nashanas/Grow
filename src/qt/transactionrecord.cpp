@@ -1,7 +1,6 @@
 // Copyright (c) 2011-2014 The Bitcoin developers
 // Copyright (c) 2014-2015 The Dash developers
-// Copyright (c) 2015-2018 The PIVX developers
-// Copyright (c) 2018 The GROW developers
+// Copyright (c) 2015-2018 The GROW developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -11,8 +10,8 @@
 #include "obfuscation.h"
 #include "swifttx.h"
 #include "timedata.h"
-#include "wallet.h"
-#include "zpivchain.h"
+#include "wallet/wallet.h"
+#include "zgrowchain.h"
 
 #include <stdint.h>
 
@@ -55,7 +54,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet* 
         if (!wtx.IsZerocoinSpend() && !ExtractDestination(wtx.vout[1].scriptPubKey, address))
             return parts;
 
-        if (wtx.IsZerocoinSpend() && (fZSpendFromMe || wallet->zpivTracker->HasMintTx(hash))) {
+        if (wtx.IsZerocoinSpend() && (fZSpendFromMe || wallet->zgrowTracker->HasMintTx(hash))) {
             //zGROW stake reward
             sub.involvesWatchAddress = false;
             sub.type = TransactionRecord::StakeZGROW;
@@ -101,7 +100,7 @@ QList<TransactionRecord> TransactionRecord::decomposeTransaction(const CWallet* 
                 isminetype mine = wallet->IsMine(txout);
                 TransactionRecord sub(hash, nTime);
                 sub.involvesWatchAddress = mine & ISMINE_WATCH_ONLY;
-                sub.type = TransactionRecord::ZerocoinSpend_Change_zCstl;
+                sub.type = TransactionRecord::ZerocoinSpend_Change_zGrow;
                 sub.address = mapValue["zerocoinmint"];
                 if (!fFeeAssigned) {
                     sub.debit -= (wtx.GetZerocoinSpent() - wtx.GetValueOut());
@@ -318,7 +317,7 @@ bool IsZGROWType(TransactionRecord::Type type)
         case TransactionRecord::ZerocoinMint:
         case TransactionRecord::ZerocoinSpend:
         case TransactionRecord::RecvFromZerocoinSpend:
-        case TransactionRecord::ZerocoinSpend_Change_zCstl:
+        case TransactionRecord::ZerocoinSpend_Change_zGrow:
         case TransactionRecord::ZerocoinSpend_FromMe:
             return true;
         default:

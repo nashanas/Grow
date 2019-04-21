@@ -57,7 +57,7 @@ static Checkpoints::MapCheckpoints mapCheckpoints =
     boost::assign::map_list_of
     (       0, uint256("0x00000b54c8874f6cefc66ad7b8cf662052083e7f6d88e511cc03a980a90fc4b4"))
     (       2, uint256("0x000004eb464d0dfd2c54d3923d7c76512d8102d5af7b2cad027eba20f966ceb3"))
-    (     300, uint256("0x0000002c586fb3940562761ca46a7b75275a8bf19d6adfdafff7b320d714ac21"))  //last pow
+    //(     250, uint256("0x0000002c586fb3940562761ca46a7b75275a8bf19d6adfdafff7b320d714ac21"))  //last pow
     ;
 static const Checkpoints::CCheckpointData data = {
     &mapCheckpoints,
@@ -118,7 +118,7 @@ public:
         pchMessageStart[2] = 0xfd;
         pchMessageStart[3] = 0xe9;              
         vAlertPubKey = ParseHex("04d4094cbc41f6c02e050b4c5806ca0cdcda23d9f009932b7b4504b7cd90af9ab5446a95f0fa4f81337ff5b33704ab0514d3327f92c74f5977ea596145470743ed");
-        nDefaultPort = 36801;
+        nDefaultPort = 36800;
         bnProofOfWorkLimit = ~uint256(0) >> 20; // GROW starting difficulty is 1 / 2^12
         nSubsidyHalvingInterval = 259000;
         nMaxReorganizationDepth = 100;
@@ -135,10 +135,9 @@ public:
         nStakeInputMinimal = 50 * COIN;
 
         /** Height or Time Based Activations **/
-        nLastPOWBlock = 300;
+        nLastPOWBlock = 350;
         nModifierUpdateBlock = 0;
         nZerocoinStartHeight = 50;
-        nZerocoinAccumulationStartHeight = 50;// RCP command starts accumulation here 
         nZerocoinStartTime = 1545266183; // October 17, 2017 4:30:00 AM
         nBlockEnforceSerialRange = 1; //Enforce serial range starting this block
         nBlockRecalculateAccumulators = 1350; //Trigger a recalculation of accumulators
@@ -149,6 +148,8 @@ public:
         nBlockZerocoinV2 = 100; //!> The block that zerocoin v2 becomes active - roughly Tuesday, May 8, 2018 4:00:00 AM GMT
         nEnforceNewSporkKey = 1552179015; //!> Sporks signed after (GMT): Tuesday, Sunday 10 March 2019 00:50:15 must use the new spork key
         nRejectOldSporkKey = 1553043015; //!> Fully reject old spork key after (GMT): Wednesday 20 March 2019 00:50:15
+        
+
         /**
          * Build the genesis block. Note that the output of the genesis coinbase cannot
          * be spent as it did not originally exist in the database.
@@ -205,6 +206,7 @@ public:
         fHeadersFirstSyncingActive = false;
 
         nPoolMaxTransactions = 3;
+        nBudgetCycleBlocks = 43200; //!< Amount of blocks in a months period of time (using 1 minutes per) = (60*24*30)
         strSporkKey = "0496bf8123a98ef714f82b89734e84936fdd4676fae2ef8093ad862308b7afd480ce8a3a8aa237a3e4e02354d8ef06811449a2fe97e31b281016a4abec6191f1f9";
         strSporkKeyOld = "04e20c7ff0795ba2ca850af8e1735efcb48dcb96fd150bedfd442adef8e4305fdd2d91a90c2fbe88d517cfd0b4a0dc41937afdbad85d535b08276a211d9a279d9b";
         strObfuscationPoolDummyAddress = "PrhtGG3qrXRYexMJTYYn8f6Xmh699DFvSa";
@@ -311,6 +313,8 @@ public:
         fTestnetToBeDeprecatedFieldRPC = true;
 
         nPoolMaxTransactions = 2;
+        nBudgetCycleBlocks = 144; //!< Ten cycles per day on testnet
+        
         strSporkKey = "04022ae65de104b75ded40fc01deb5e3079fe6f8b8867db6dea4d94dc89dd192ef5f949cdd40e504cdd62af2edeec3fe53559c3832fab213441b2f0f13bf55bdd1";
         strSporkKeyOld = "04348C2F50F90267E64FACC65BFDC9D0EB147D090872FB97ABAE92E9A36E6CA60983E28E741F8E7277B11A7479B626AC115BA31463AC48178A5075C5A9319D4A38";
         strObfuscationPoolDummyAddress = "y57cqfGRkekRyDRNeJiLtYVEbvhXrNbmox";
@@ -352,6 +356,19 @@ public:
         nTargetTimespan = 2 * 60 * 60; // GROW: 1 day
         nTargetSpacing = 1 * 60;        // GROW: 1 minutes
         bnProofOfWorkLimit = ~uint256(0) >> 1;
+        nLastPOWBlock = 250;
+        nMaturity = 100;
+        nMasternodeCountDrift = 4;
+        nModifierUpdateBlock = 0; //approx Mon, 17 Apr 2017 04:00:00 GMT
+        nMaxMoneyOut = 43199500 * COIN;
+        nZerocoinStartHeight = 300;
+        nBlockZerocoinV2 = 300;
+        nZerocoinStartTime = 1501776000;
+        nBlockEnforceSerialRange = 1; //Enforce serial range starting this block
+        nBlockRecalculateAccumulators = 999999999; //Trigger a recalculation of accumulators
+        nBlockFirstFraudulent = 999999999; //First block that bad serials emerged
+        nBlockLastGoodCheckpoint = 999999999; //Last valid accumulator checkpoint
+
         genesis.nTime = 1518696183;             // GMT: Thursday, 15. February 2018 12:03:03
         genesis.nBits = 0x207fffff;
         genesis.nNonce = 574755;                // hex 57 47 52 in text = GROW
@@ -370,6 +387,7 @@ public:
         fDefaultConsistencyChecks = true;
         fRequireStandard = false;
         fMineBlocksOnDemand = true;
+        fSkipProofOfWorkCheck = true;
         fTestnetToBeDeprecatedFieldRPC = false;
     }
     

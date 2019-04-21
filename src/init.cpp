@@ -12,8 +12,7 @@
 
 #include "init.h"
 
-#include "accumulatorcheckpoints.h"
-#include "accumulators.h"
+#include "zgrow/accumulators.h"
 #include "activemasternode.h"
 #include "addrman.h"
 #include "amount.h"
@@ -30,7 +29,7 @@
 #include "masternodeman.h"
 #include "miner.h"
 #include "net.h"
-#include "rpcserver.h"
+#include "rpc/server.h"
 #include "script/standard.h"
 #include "scheduler.h"
 #include "spork.h"
@@ -41,13 +40,13 @@
 #include "util.h"
 #include "utilmoneystr.h"
 #include "validationinterface.h"
-#include "zpivchain.h"
+#include "zgrow/accumulatorcheckpoints.h"
+#include "zgrowchain.h"
 
 #ifdef ENABLE_WALLET
-#include "db.h"
-#include "wallet.h"
-#include "walletdb.h"
-#include "accumulators.h"
+#include "wallet/db.h"
+#include "wallet/wallet.h"
+#include "wallet/walletdb.h"
 
 #endif
 
@@ -172,14 +171,15 @@ static CCoinsViewDB* pcoinsdbview = NULL;
 static CCoinsViewErrorCatcher* pcoinscatcher = NULL;
 static boost::scoped_ptr<ECCVerifyHandle> globalVerifyHandle;
 
-void Interrupt(boost::thread_group& threadGroup)
+static boost::thread_group threadGroup;
+static CScheduler scheduler;
+void Interrupt()
 {
     InterruptHTTPServer();
     InterruptHTTPRPC();
     InterruptRPC();
     InterruptREST();
     InterruptTorControl();
-    threadGroup.interrupt_all();
 }
 
 /** Preparing steps before shutting down or restarting the wallet */
@@ -214,6 +214,8 @@ void PrepareShutdown()
     DumpMasternodePayments();
     UnregisterNodeSignals(GetNodeSignals());
 
+    threadGroup.interrupt_all();
+    threadGroup.join_all();
     if (fFeeEstimatesInitialized) {
         boost::filesystem::path est_path = GetDataDir() / FEE_ESTIMATES_FILENAME;
         CAutoFile est_fileout(fopen(est_path.string().c_str(), "wb"), SER_DISK, CLIENT_VERSION);
@@ -285,6 +287,9 @@ void Shutdown()
     }
     // Shutdown part 2: Stop TOR thread and delete wallet instance
     StopTorControl();
+    if (nLocalServices == NODE_BLOOM_LIGHT_ZC) {
+        lightWorker.StopLightZgrowThread();
+    }
 #ifdef ENABLE_WALLET
     delete pwalletMain;
     pwalletMain = NULL;
@@ -334,8 +339,14 @@ bool static Bind(const CService& addr, unsigned int flags)
     return true;
 }
 
+void OnRPCStarted()
+{
+    uiInterface.NotifyBlockTip.connect(RPCNotifyBlockChange);
+}
+
 void OnRPCStopped()
 {
+    uiInterface.NotifyBlockTip.disconnect(RPCNotifyBlockChange);
     cvBlockChange.notify_all();
     LogPrint("rpc", "RPC stopped.\n");
 }
@@ -411,7 +422,8 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-onlynet=<net>", _("Only connect to nodes in network <net> (ipv4, ipv6 or onion)"));
     strUsage += HelpMessageOpt("-permitbaremultisig", strprintf(_("Relay non-P2SH multisig (default: %u)"), 1));
     strUsage += HelpMessageOpt("-peerbloomfilters", strprintf(_("Support filtering of blocks and transaction with bloom filters (default: %u)"), DEFAULT_PEERBLOOMFILTERS));
-    strUsage += HelpMessageOpt("-port=<port>", strprintf(_("Listen for connections on <port> (default: %u or testnet: %u)"), 36801, 51996));
+    strUsage += HelpMessageOpt("-peerbloomfilterszc", strprintf(_("Support the zerocoin light node protocol (default: %u)"), DEFAULT_PEERBLOOMFILTERS_ZC));
+    strUsage += HelpMessageOpt("-port=<port>", strprintf(_("Listen for connections on <port> (default: %u or testnet: %u)"), 36800, 51474));
     strUsage += HelpMessageOpt("-proxy=<ip:port>", _("Connect through SOCKS5 proxy"));
     strUsage += HelpMessageOpt("-proxyrandomize", strprintf(_("Randomize credentials for every proxy connection. This enables Tor stream isolation (default: %u)"), 1));
     strUsage += HelpMessageOpt("-seednode=<ip>", _("Connect to a node to retrieve peer addresses, and disconnect"));
@@ -469,6 +481,7 @@ std::string HelpMessage(HelpMessageMode mode)
 #endif
 
     strUsage += HelpMessageGroup(_("Debugging/Testing options:"));
+    strUsage += HelpMessageOpt("-uacomment=<cmt>", _("Append comment to the user agent string"));
     if (GetBoolArg("-help-debug", false)) {
         strUsage += HelpMessageOpt("-checkblockindex", strprintf("Do a full consistency check for mapBlockIndex, setBlockIndexCandidates, chainActive and mapBlocksUnlinked occasionally. Also sets -checkmempool (default: %u)", Params(CBaseChainParams::MAIN).DefaultConsistencyChecks()));
         strUsage += HelpMessageOpt("-checkmempool=<n>", strprintf("Run checks every <n> transactions (default: %u)", Params(CBaseChainParams::MAIN).DefaultConsistencyChecks()));
@@ -483,7 +496,7 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-stopafterblockimport", strprintf(_("Stop running after importing blocks from disk (default: %u)"), 0));
         strUsage += HelpMessageOpt("-sporkkey=<privkey>", _("Enable spork administration functionality with the appropriate private key."));
     }
-    string debugCategories = "addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, tor, mempool, net, proxy, http, libevent, grow, (obfuscation, swiftx, masternode, mnpayments, mnbudget, zero)"; // Don't translate these and qt below
+    string debugCategories = "addrman, alert, bench, coindb, db, lock, rand, rpc, selectcoins, tor, mempool, net, proxy, http, libevent, grow, (obfuscation, swiftx, masternode, mnpayments, mnbudget, zero, precompute, staking)"; // Don't translate these and qt below
     if (mode == HMM_BITCOIN_QT)
         debugCategories += ", qt";
     strUsage += HelpMessageOpt("-debug=<category>", strprintf(_("Output debugging information (default: %u, supplying <category> is optional)"), 0) + ". " +
@@ -517,7 +530,7 @@ std::string HelpMessage(HelpMessageMode mode)
 
 #ifdef ENABLE_WALLET
     strUsage += HelpMessageGroup(_("Staking options:"));
-    strUsage += HelpMessageOpt("-growstake=<n>", strprintf(_("Enable staking functionality (0-1, default: %u)"), 1));
+    strUsage += HelpMessageOpt("-staking=<n>", strprintf(_("Enable staking functionality (0-1, default: %u)"), 1));
     strUsage += HelpMessageOpt("-growstake=<n>", strprintf(_("Enable or disable staking functionality for GROW inputs (0-1, default: %u)"), 1));
     strUsage += HelpMessageOpt("-zgrowstake=<n>", strprintf(_("Enable or disable staking functionality for zGROW inputs (0-1, default: %u)"), 1));
     strUsage += HelpMessageOpt("-reservebalance=<amt>", _("Keep the specified amount available for spending at all times (default: 0)"));
@@ -532,16 +545,19 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-mnconf=<file>", strprintf(_("Specify masternode configuration file (default: %s)"), "masternode.conf"));
     strUsage += HelpMessageOpt("-mnconflock=<n>", strprintf(_("Lock masternodes from masternode configuration file (default: %u)"), 1));
     strUsage += HelpMessageOpt("-masternodeprivkey=<n>", _("Set the masternode private key"));
-    strUsage += HelpMessageOpt("-masternodeaddr=<n>", strprintf(_("Set external address:port to get to this masternode (example: %s)"), "128.127.106.235:36801"));
+    strUsage += HelpMessageOpt("-masternodeaddr=<n>", strprintf(_("Set external address:port to get to this masternode (example: %s)"), "128.127.106.235:36800"));
     strUsage += HelpMessageOpt("-budgetvotemode=<mode>", _("Change automatic finalized budget voting behavior. mode=auto: Vote for only exact finalized budget match to my generated budget. (string, default: auto)"));
 
     strUsage += HelpMessageGroup(_("Zerocoin options:"));
 #ifdef ENABLE_WALLET
     strUsage += HelpMessageOpt("-enablezeromint=<n>", strprintf(_("Enable automatic Zerocoin minting (0-1, default: %u)"), 1));
+    strUsage += HelpMessageOpt("-enableautoconvertaddress=<n>", strprintf(_("Enable automatic Zerocoin minting from specific addresses (0-1, default: %u)"), DEFAULT_AUTOCONVERTADDRESS));
     strUsage += HelpMessageOpt("-zeromintpercentage=<n>", strprintf(_("Percentage of automatically minted Zerocoin  (1-100, default: %u)"), 10));
     strUsage += HelpMessageOpt("-preferredDenom=<n>", strprintf(_("Preferred Denomination for automatically minted Zerocoin  (1/5/10/50/100/500/1000/5000), 0 for no preference. default: %u)"), 0));
-    strUsage += HelpMessageOpt("-backupzpiv=<n>", strprintf(_("Enable automatic wallet backups triggered after each zGROW minting (0-1, default: %u)"), 1));
-    strUsage += HelpMessageOpt("-zpivbackuppath=<dir|file>", _("Specify custom backup path to add a copy of any automatic zGROW backup. If set as dir, every backup generates a timestamped file. If set as file, will rewrite to that file every backup. If backuppath is set as well, 4 backups will happen"));
+    strUsage += HelpMessageOpt("-backupzgrow=<n>", strprintf(_("Enable automatic wallet backups triggered after each zGROW minting (0-1, default: %u)"), 1));
+    strUsage += HelpMessageOpt("-precompute=<n>", strprintf(_("Enable precomputation of zGROW spends and stakes (0-1, default %u)"), 1));
+    strUsage += HelpMessageOpt("-precomputecachelength=<n>", strprintf(_("Set the number of included blocks to precompute per cycle. (minimum: %d) (maximum: %d) (default: %d)"), MIN_PRECOMPUTE_LENGTH, MAX_PRECOMPUTE_LENGTH, DEFAULT_PRECOMPUTE_LENGTH));
+    strUsage += HelpMessageOpt("-zgrowbackuppath=<dir|file>", _("Specify custom backup path to add a copy of any automatic zGROW backup. If set as dir, every backup generates a timestamped file. If set as file, will rewrite to that file every backup. If backuppath is set as well, 4 backups will happen"));
 #endif // ENABLE_WALLET
     strUsage += HelpMessageOpt("-reindexzerocoin=<n>", strprintf(_("Delete all zerocoin spends and mints that have been recorded to the blockchain database and reindex them (0-1, default: %u)"), 0));
 
@@ -711,8 +727,9 @@ bool InitSanityCheck(void)
     return true;
 }
 
-bool AppInitServers(boost::thread_group& threadGroup)
+bool AppInitServers()
 {
+    RPCServer::OnStarted(&OnRPCStarted);
     RPCServer::OnStopped(&OnRPCStopped);
     RPCServer::OnPreCommand(&OnRPCPreCommand);
     if (!InitHTTPServer())
@@ -731,7 +748,7 @@ bool AppInitServers(boost::thread_group& threadGroup)
 /** Initialize grow.
  *  @pre Parameters should be parsed and config file should be read.
  */
-bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
+bool AppInit2()
 {
 // ********************************************************* Step 1: setup
 #ifdef _MSC_VER
@@ -920,8 +937,8 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     bool fDisableWallet = GetBoolArg("-disablewallet", false);
     if (fDisableWallet) {
 #endif
-        if (SoftSetBoolArg("-growstake", false))
-            LogPrintf("AppInit2 : parameter interaction: wallet functionality not enabled -> setting -growstake=0\n");
+        if (SoftSetBoolArg("-staking", false))
+            LogPrintf("AppInit2 : parameter interaction: wallet functionality not enabled -> setting -staking=0\n");
 #ifdef ENABLE_WALLET
     }
 #endif
@@ -980,6 +997,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
     bSpendZeroConfChange = GetBoolArg("-spendzeroconfchange", false);
     bdisableSystemnotifications = GetBoolArg("-disablesystemnotifications", false);
     fSendFreeTransactions = GetBoolArg("-sendfreetransactions", false);
+    fEnableAutoConvert = GetBoolArg("-enableautoconvertaddress", DEFAULT_AUTOCONVERTADDRESS);
 
     std::string strWalletFile = GetArg("-wallet", "wallet.dat");
 #endif // ENABLE_WALLET
@@ -989,10 +1007,15 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     fAlerts = GetBoolArg("-alerts", DEFAULT_ALERTS);
 
+    if (GetBoolArg("-peerbloomfilterszc", DEFAULT_PEERBLOOMFILTERS_ZC))
+        nLocalServices |= NODE_BLOOM_LIGHT_ZC;
+
+    if (nLocalServices != NODE_BLOOM_LIGHT_ZC) {
 
     if (GetBoolArg("-peerbloomfilters", DEFAULT_PEERBLOOMFILTERS))
         nLocalServices |= NODE_BLOOM;
 
+    }
     // ********************************************************* Step 4: application initialization: dir lock, daemonize, pidfile, debug log
 
     // Initialize elliptic curve code
@@ -1061,7 +1084,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
      */
     if (fServer) {
         uiInterface.InitMessage.connect(SetRPCWarmupStatus);
-        if (!AppInitServers(threadGroup))
+        if (!AppInitServers())
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
 
@@ -1221,6 +1244,19 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     RegisterNodeSignals(GetNodeSignals());
 
+    std::vector<std::string> uacomments;
+    for (const std::string& cmt : mapMultiArgs["-uacomment"]) {
+        if (cmt != SanitizeString(cmt, SAFE_CHARS_UA_COMMENT))
+            return InitError(strprintf(_("User Agent comment (%s) contains unsafe characters."), cmt));
+        uacomments.push_back(cmt);
+    }
+
+    // format user agent, check total size
+    strSubVersion = FormatSubVersion(CLIENT_NAME, CLIENT_VERSION, uacomments);
+    if (strSubVersion.size() > MAX_SUBVERSION_LENGTH) {
+        return InitError(strprintf(_("Total length of network version string (%i) exceeds maximum length (%i). Reduce the number or size of uacomments."),
+            strSubVersion.size(), MAX_SUBVERSION_LENGTH));
+    }
     if (mapArgs.count("-onlynet")) {
         std::set<enum Network> nets;
         BOOST_FOREACH (std::string snet, mapMultiArgs["-onlynet"]) {
@@ -1314,7 +1350,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         } else {
             struct in_addr inaddr_any;
             inaddr_any.s_addr = INADDR_ANY;
-            fBound |= Bind(CService(in6addr_any, GetListenPort()), BF_NONE);
+            fBound |= Bind(CService((in6_addr)IN6ADDR_ANY_INIT, GetListenPort()), BF_NONE);
             fBound |= Bind(CService(inaddr_any, GetListenPort()), !fBound ? BF_REPORT_ERROR : BF_NONE);
         }
         if (!fBound)
@@ -1493,16 +1529,29 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
                     }
                 }
 
+                if (!fReindex) {
                 uiInterface.InitMessage(_("Verifying blocks..."));
 
                 // Flag sent to validation code to let it know it can skip certain checks
                 fVerifyingBlocks = true;
 
+                    {
+                        LOCK(cs_main);
+                        CBlockIndex *tip = chainActive[chainActive.Height()];
+                        RPCNotifyBlockChange(tip->GetBlockHash());
+                        if (tip && tip->nTime > GetAdjustedTime() + 2 * 60 * 60) {
+                            strLoadError = _("The block database contains a block which appears to be from the future. "
+                                             "This may be due to your computer's date and time being set incorrectly. "
+                                             "Only rebuild the block database if you are sure that your computer's date and time are correct");
+                            break;
+                        }
+                    }
                 // Zerocoin must check at level 4
                 if (!CVerifyDB().VerifyDB(pcoinsdbview, 4, GetArg("-checkblocks", 100))) {
                     strLoadError = _("Corrupted block database detected");
                     fVerifyingBlocks = false;
                     break;
+                    }
                 }
             } catch (std::exception& e) {
                 if (fDebug) LogPrintf("%s\n", e.what());
@@ -1678,11 +1727,12 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         //Inititalize zGROWWallet
         uiInterface.InitMessage(_("Syncing zGROW wallet..."));
 
-        bool fEnableZCstlBackups = GetBoolArg("-backupzpiv", true);
-        pwalletMain->setZCstlAutoBackups(fEnableZCstlBackups);
+        pwalletMain->InitAutoConvertAddresses();
 
+        bool fEnableZGrowBackups = GetBoolArg("-backupzgrow", true);
+        pwalletMain->setZGrowAutoBackups(fEnableZGrowBackups);
         //Load zerocoin mint hashes to memory
-        pwalletMain->zpivTracker->Init();
+        pwalletMain->zgrowTracker->Init();
         zwalletMain->LoadMintPoolFromDB();
         zwalletMain->SyncWithChain();
     }  // (!fDisableWallet)
@@ -1813,7 +1863,7 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         BOOST_FOREACH (CMasternodeConfig::CMasternodeEntry mne, masternodeConfig.getEntries()) {
             LogPrintf("  %s %s\n", mne.getTxHash(), mne.getOutputIndex());
             mnTxHash.SetHex(mne.getTxHash());
-            COutPoint outpoint = COutPoint(mnTxHash, boost::lexical_cast<unsigned int>(mne.getOutputIndex()));
+            COutPoint outpoint = COutPoint(mnTxHash, (unsigned int) std::stoul(mne.getOutputIndex().c_str()));
             pwalletMain->LockCoin(outpoint);
         }
     }
@@ -1907,6 +1957,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
         StartTorControl(threadGroup);
 
     StartNode(threadGroup, scheduler);
+    if (nLocalServices & NODE_BLOOM_LIGHT_ZC) {
+        // Run a thread to compute witnesses
+        lightWorker.StartLightZgrowThread(threadGroup);
+    }
 
 #ifdef ENABLE_WALLET
     // Generate coins in the background
@@ -1926,6 +1980,10 @@ bool AppInit2(boost::thread_group& threadGroup, CScheduler& scheduler)
 
         // Run a thread to flush wallet periodically
         threadGroup.create_thread(boost::bind(&ThreadFlushWalletDB, boost::ref(pwalletMain->strWalletFile)));
+        if (GetBoolArg("-precompute", true)) {
+            // Run a thread to precompute any zGROW spends
+            threadGroup.create_thread(boost::bind(&ThreadPrecomputeSpends));
+        }
     }
 #endif
 

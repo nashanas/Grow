@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018 The PIVX developers
-// Copyright (c) 2018 The GROW developers
+// Copyright (c) 2017-2018 The GROW developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -15,7 +14,7 @@
 #include "sendcoinsentry.h"
 #include "walletmodel.h"
 #include "coincontrol.h"
-#include "zpivcontroldialog.h"
+#include "zgrowcontroldialog.h"
 #include "spork.h"
 #include "askpassphrasedialog.h"
 
@@ -23,13 +22,14 @@
 #include <QSettings>
 #include <utilmoneystr.h>
 #include <QtWidgets>
-#include <primitives/deterministicmint.h>
-#include <accumulators.h>
+#include <zgrow/deterministicmint.h>
+#include <zgrow/accumulators.h>
 
 PrivacyDialog::PrivacyDialog(QWidget* parent) : QDialog(parent, Qt::WindowSystemMenuHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint | Qt::WindowCloseButtonHint),
                                                           ui(new Ui::PrivacyDialog),
                                                           walletModel(0),
-                                                          currentBalance(-1)
+                                                          currentBalance(-1),
+                                                          fDenomsMinimized(true)
 {
     nDisplayUnit = 0; // just make sure it's not unitialized
     ui->setupUi(this);
@@ -85,14 +85,6 @@ PrivacyDialog::PrivacyDialog(QWidget* parent) : QDialog(parent, Qt::WindowSystem
 
     // GROW settings
     QSettings settings;
-    if (!settings.contains("nSecurityLevel")){
-        nSecurityLevel = 42;
-        settings.setValue("nSecurityLevel", nSecurityLevel);
-    }
-    else{
-        nSecurityLevel = settings.value("nSecurityLevel").toInt();
-    }
-
     if (!settings.contains("fMinimizeChange")){
         fMinimizeChange = false;
         settings.setValue("fMinimizeChange", fMinimizeChange);
@@ -100,6 +92,7 @@ PrivacyDialog::PrivacyDialog(QWidget* parent) : QDialog(parent, Qt::WindowSystem
     else{
         fMinimizeChange = settings.value("fMinimizeChange").toBool();
     }
+
     ui->checkBoxMinimizeChange->setChecked(fMinimizeChange);
 
     // Start with displaying the "out of sync" warnings
@@ -111,10 +104,17 @@ PrivacyDialog::PrivacyDialog(QWidget* parent) : QDialog(parent, Qt::WindowSystem
 
     // Set labels/buttons depending on SPORK_16 status
     updateSPORK16Status();
+
+    // init Denoms section
+    if(!settings.contains("fDenomsSectionMinimized"))
+        settings.setValue("fDenomsSectionMinimized", true);
+    minimizeDenomsSection(settings.value("fDenomsSectionMinimized").toBool());
 }
 
 PrivacyDialog::~PrivacyDialog()
 {
+    QSettings settings;
+    settings.setValue("fDenomsSectionMinimized", fDenomsMinimized);
     delete ui;
 }
 
@@ -132,7 +132,6 @@ void PrivacyDialog::setModel(WalletModel* walletModel)
                                SLOT(setBalance(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)));
         connect(walletModel->getOptionsModel(), SIGNAL(zeromintEnableChanged(bool)), this, SLOT(updateAutomintStatus()));
         connect(walletModel->getOptionsModel(), SIGNAL(zeromintPercentageChanged(int)), this, SLOT(updateAutomintStatus()));
-        ui->securityLevel->setValue(nSecurityLevel);
     }
 }
 
@@ -251,6 +250,7 @@ void PrivacyDialog::on_pushButtonMintReset_clicked()
     return;
 }
 
+
 void PrivacyDialog::on_pushButtonSpentReset_clicked()
 {
     ui->TEMintStatus->setPlainText(tr("Starting ResetSpentZerocoin: "));
@@ -293,19 +293,19 @@ void PrivacyDialog::on_pushButtonSpendzGROW_clicked()
     sendzGROW();
 }
 
-void PrivacyDialog::on_pushButtonZCstlControl_clicked()
+void PrivacyDialog::on_pushButtonZGrowControl_clicked()
 {
     if (!walletModel || !walletModel->getOptionsModel())
         return;
 
-    ZCstlControlDialog* zCstlControl = new ZCstlControlDialog(this);
-    zCstlControl->setModel(walletModel);
-    zCstlControl->exec();
+    ZGrowControlDialog* zGrowControl = new ZGrowControlDialog(this);
+    zGrowControl->setModel(walletModel);
+    zGrowControl->exec();
 }
 
-void PrivacyDialog::setZCstlControlLabels(int64_t nAmount, int nQuantity)
+void PrivacyDialog::setZGrowControlLabels(int64_t nAmount, int nQuantity)
 {
-    ui->labelzCstlSelected_int->setText(QString::number(nAmount));
+    ui->labelzGrowSelected_int->setText(QString::number(nAmount));
     ui->labelQuantitySelected_int->setText(QString::number(nQuantity));
 }
 
@@ -371,10 +371,6 @@ void PrivacyDialog::sendzGROW()
         }
     }
 
-    // Persist Security Level for next start
-    nSecurityLevel = ui->securityLevel->value();
-    settings.setValue("nSecurityLevel", nSecurityLevel);
-
     // Spend confirmation message box
 
     // Add address info if available
@@ -393,8 +389,7 @@ void PrivacyDialog::sendzGROW()
         strAddress = tr(" to a newly generated (unused and therefore anonymous) local address <br />");
     }
 
-    QString strSecurityLevel = tr("with Security Level ") + ui->securityLevel->text() + " ?";
-    strQuestionString += strAmount + strAddress + strSecurityLevel;
+    strQuestionString += strAmount + strAddress;
 
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm send coins"),
@@ -408,25 +403,16 @@ void PrivacyDialog::sendzGROW()
     }
 
     int64_t nTime = GetTimeMillis();
-    ui->TEMintStatus->setPlainText(tr("Spending Zerocoin.\nComputationally expensive, might need several minutes depending on the selected Security Level and your hardware.\nPlease be patient..."));
+    ui->TEMintStatus->setPlainText(tr("Spending Zerocoin.\nComputationally expensive, might need several minutes depending on your hardware.\nPlease be patient..."));
     ui->TEMintStatus->repaint();
 
     // use mints from zGROW selector if applicable
     vector<CMintMeta> vMintsToFetch;
     vector<CZerocoinMint> vMintsSelected;
-    if (!ZCstlControlDialog::setSelectedMints.empty()) {
-        vMintsToFetch = ZCstlControlDialog::GetSelectedMints();
+    if (!ZGrowControlDialog::setSelectedMints.empty()) {
+        vMintsToFetch = ZGrowControlDialog::GetSelectedMints();
 
         for (auto& meta : vMintsToFetch) {
-            if (meta.nVersion < libzerocoin::PrivateCoin::PUBKEY_VERSION) {
-                //version 1 coins have to use full security level to successfully spend.
-                if (nSecurityLevel < 100) {
-                    QMessageBox::warning(this, tr("Spend Zerocoin"), tr("Version 1 zGROW require a security level of 100 to successfully spend."), QMessageBox::Ok, QMessageBox::Ok);
-                    ui->TEMintStatus->setPlainText(tr("Failed to spend zGROW"));
-                    ui->TEMintStatus->repaint();
-                    return;
-                }
-            }
             CZerocoinMint mint;
             if (!pwalletMain->GetMint(meta.hashSerial, mint)) {
                 ui->TEMintStatus->setPlainText(tr("Failed to fetch mint associated with serial hash"));
@@ -443,22 +429,15 @@ void PrivacyDialog::sendzGROW()
     bool fSuccess = false;
     if(ui->payTo->text().isEmpty()){
         // Spend to newly generated local address
-        fSuccess = pwalletMain->SpendZerocoin(nAmount, nSecurityLevel, wtxNew, receipt, vMintsSelected, fMintChange, fMinimizeChange);
+        fSuccess = pwalletMain->SpendZerocoin(nAmount, wtxNew, receipt, vMintsSelected, fMintChange, fMinimizeChange);
     }
     else {
         // Spend to supplied destination address
-        fSuccess = pwalletMain->SpendZerocoin(nAmount, nSecurityLevel, wtxNew, receipt, vMintsSelected, fMintChange, fMinimizeChange, &address);
+        fSuccess = pwalletMain->SpendZerocoin(nAmount, wtxNew, receipt, vMintsSelected, fMintChange, fMinimizeChange, &address);
     }
 
     // Display errors during spend
     if (!fSuccess) {
-        if (receipt.GetStatus() == ZGROW_SPEND_V1_SEC_LEVEL) {
-            QMessageBox::warning(this, tr("Spend Zerocoin"), tr("Version 1 zGROW require a security level of 100 to successfully spend."), QMessageBox::Ok, QMessageBox::Ok);
-            ui->TEMintStatus->setPlainText(tr("Failed to spend zGROW"));
-            ui->TEMintStatus->repaint();
-            return;
-        }
-
         int nNeededSpends = receipt.GetNeededSpends(); // Number of spends we would need for this transaction
         const int nMaxSpends = Params().Zerocoin_MaxSpendsPerTransaction(); // Maximum possible spends for one zGROW transaction
         if (nNeededSpends > nMaxSpends) {
@@ -486,9 +465,9 @@ void PrivacyDialog::sendzGROW()
             walletModel->updateAddressBookLabels(address.Get(), "(no label)", "send");
     }
 
-    // Clear zpiv selector in case it was used
-    ZCstlControlDialog::setSelectedMints.clear();
-    ui->labelzCstlSelected_int->setText(QString("0"));
+    // Clear zgrow selector in case it was used
+    ZGrowControlDialog::setSelectedMints.clear();
+    ui->labelzGrowSelected_int->setText(QString("0"));
     ui->labelQuantitySelected_int->setText(QString("0"));
 
     // Some statistics for entertainment
@@ -581,6 +560,29 @@ void PrivacyDialog::coinControlUpdateLabels()
     }
 }
 
+
+void PrivacyDialog::on_pushButtonShowDenoms_clicked()
+{
+    minimizeDenomsSection(false);
+}
+
+void PrivacyDialog::on_pushButtonHideDenoms_clicked()
+{
+    minimizeDenomsSection(true);
+}
+
+void PrivacyDialog::minimizeDenomsSection(bool fMinimize)
+{
+    if (fMinimize) {
+        ui->balanceSupplyFrame->show();
+        ui->verticalFrameRight->hide();
+    } else {
+        ui->balanceSupplyFrame->hide();
+        ui->verticalFrameRight->show();
+    }
+    fDenomsMinimized = fMinimize;
+}
+
 bool PrivacyDialog::updateLabel(const QString& address)
 {
     if (!walletModel)
@@ -619,7 +621,7 @@ void PrivacyDialog::setBalance(const CAmount& balance, const CAmount& unconfirme
         mapImmature.insert(make_pair(denom, 0));
     }
 
-    std::vector<CMintMeta> vMints = pwalletMain->zpivTracker->GetMints(false);
+    std::vector<CMintMeta> vMints = pwalletMain->zgrowTracker->GetMints(false);
     map<libzerocoin::CoinDenomination, int> mapMaturityHeights = GetMintMaturityHeight();
     for (auto& meta : vMints){
         // All denominations
@@ -702,6 +704,7 @@ void PrivacyDialog::setBalance(const CAmount& balance, const CAmount& unconfirme
 
     ui->labelzAvailableAmount->setText(QString::number(zerocoinBalance/COIN) + QString(" zGROW "));
     ui->labelzAvailableAmount_2->setText(QString::number(matureZerocoinBalance/COIN) + QString(" zGROW "));
+    ui->labelzAvailableAmount_4->setText(QString::number(zerocoinBalance/COIN) + QString(" zGROW "));
     ui->labelzGROWAmountValue->setText(BitcoinUnits::floorHtmlWithUnit(nDisplayUnit, balance - immatureBalance - nLockedBalance, false, BitcoinUnits::separatorAlways));
 
     // Display AutoMint status
@@ -712,6 +715,8 @@ void PrivacyDialog::setBalance(const CAmount& balance, const CAmount& unconfirme
 
     // Display global supply
     ui->labelZsupplyAmount->setText(QString::number(chainActive.Tip()->GetZerocoinSupply()/COIN) + QString(" <b>zGROW </b> "));
+    ui->labelZsupplyAmount_2->setText(QString::number(chainActive.Tip()->GetZerocoinSupply()/COIN) + QString(" <b>zGROW </b> "));
+
     for (auto denom : libzerocoin::zerocoinDenomList) {
         int64_t nSupply = chainActive.Tip()->mapZerocoinSupply.at(denom);
         QString strSupply = QString::number(nSupply) + " x " + QString::number(denom) + " = <b>" +

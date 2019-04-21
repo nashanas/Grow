@@ -15,7 +15,6 @@
 #include "allocators.h"
 #include "chainparamsbase.h"
 #include "random.h"
-#include "serialize.h"
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
@@ -25,7 +24,6 @@
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
-#include <openssl/crypto.h> // for OPENSSL_cleanse()
 #include <openssl/evp.h>
 
 
@@ -91,19 +89,6 @@
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
 
-// Work around clang compilation problem in Boost 1.46:
-// /usr/include/boost/program_options/detail/config_file.hpp:163:17: error: call to function 'to_internal' that is neither visible in the template definition nor found by argument-dependent lookup
-// See also: http://stackoverflow.com/questions/10020179/compilation-fail-in-boost-librairies-program-options
-//           http://clang.debian.net/status.php?version=3.0&key=CANNOT_FIND_FUNCTION
-namespace boost
-{
-namespace program_options
-{
-std::string to_internal(const std::string&);
-}
-
-} // namespace boost
-
 using namespace std;
 
 // GROW only features
@@ -117,6 +102,7 @@ bool fEnableSwiftTX = true;
 int nSwiftTXDepth = 5;
 // Automatic Zerocoin minting
 bool fEnableZeromint = false;
+bool fEnableAutoConvert = true;
 int nZeromintPercentage = 10;
 int nPreferredDenom = 0;
 const int64_t AUTOMINT_DELAY = (60 * 5); // Wait at least 5 minutes until Automint starts
@@ -246,6 +232,8 @@ bool LogAcceptCategory(const char* category)
                 ptrCategory->insert(string("mnpayments"));
                 ptrCategory->insert(string("zero"));
                 ptrCategory->insert(string("mnbudget"));
+                ptrCategory->insert(string("precompute"));
+                ptrCategory->insert(string("staking"));
             }
         }
         const set<string>& setCategories = *ptrCategory.get();
@@ -387,13 +375,11 @@ static const int screenWidth = 79;
 static const int optIndent = 2;
 static const int msgIndent = 7;
 
-std::string HelpMessageGroup(const std::string& message)
-{
+std::string HelpMessageGroup(const std::string &message) {
     return std::string(message) + std::string("\n\n");
 }
 
-std::string HelpMessageOpt(const std::string& option, const std::string& message)
-{
+std::string HelpMessageOpt(const std::string &option, const std::string &message) {
     return std::string(optIndent, ' ') + std::string(option) +
            std::string("\n") + std::string(msgIndent, ' ') +
            FormatParagraph(message, screenWidth - msgIndent, msgIndent) +
@@ -712,12 +698,12 @@ void ShrinkDebugFile()
         // Restart the file with some of the end
         std::vector<char> vch(200000, 0);
         fseek(file, -((long)vch.size()), SEEK_END);
-        int nBytes = fread(begin_ptr(vch), 1, vch.size(), file);
+        int nBytes = fread(vch.data(), 1, vch.size(), file);
         fclose(file);
 
         file = fopen(pathLog.string().c_str(), "w");
         if (file) {
-            fwrite(begin_ptr(vch), 1, nBytes, file);
+            fwrite(vch.data(), 1, nBytes, file);
             fclose(file);
         }
     } else if (file != NULL)

@@ -1,16 +1,15 @@
-// Copyright (c) 2017-2018 The PIVX developers
-// Copyright (c) 2018 The GROW developers
+// Copyright (c) 2017-2018 The GROW developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "accumulators.h"
+#include "zgrow/accumulators.h"
 #include "chain.h"
-#include "primitives/deterministicmint.h"
+#include "zgrow/deterministicmint.h"
 #include "main.h"
 #include "stakeinput.h"
-#include "wallet.h"
+#include "wallet/wallet.h"
 
-CZCstlStake::CZCstlStake(const libzerocoin::CoinSpend& spend)
+CZGrowStake::CZGrowStake(const libzerocoin::CoinSpend& spend)
 {
     this->nChecksum = spend.getAccumulatorChecksum();
     this->denom = spend.getDenomination();
@@ -20,7 +19,7 @@ CZCstlStake::CZCstlStake(const libzerocoin::CoinSpend& spend)
     fMint = false;
 }
 
-int CZCstlStake::GetChecksumHeightFromMint()
+int CZGrowStake::GetChecksumHeightFromMint()
 {
     int nHeightChecksum = chainActive.Height() - Params().Zerocoin_RequiredStakeDepth();
 
@@ -31,12 +30,12 @@ int CZCstlStake::GetChecksumHeightFromMint()
     return GetChecksumHeight(nChecksum, denom);
 }
 
-int CZCstlStake::GetChecksumHeightFromSpend()
+int CZGrowStake::GetChecksumHeightFromSpend()
 {
     return GetChecksumHeight(nChecksum, denom);
 }
 
-uint32_t CZCstlStake::GetChecksum()
+uint32_t CZGrowStake::GetChecksum()
 {
     return nChecksum;
 }
@@ -44,7 +43,7 @@ uint32_t CZCstlStake::GetChecksum()
 // The zGROW block index is the first appearance of the accumulator checksum that was used in the spend
 // note that this also means when staking that this checksum should be from a block that is beyond 60 minutes old and
 // 100 blocks deep.
-CBlockIndex* CZCstlStake::GetIndexFrom()
+CBlockIndex* CZGrowStake::GetIndexFrom()
 {
     if (pindexFrom)
         return pindexFrom;
@@ -66,21 +65,28 @@ CBlockIndex* CZCstlStake::GetIndexFrom()
     return pindexFrom;
 }
 
-CAmount CZCstlStake::GetValue()
+CAmount CZGrowStake::GetValue()
 {
     return denom * COIN;
 }
 
 //Use the first accumulator checkpoint that occurs 60 minutes after the block being staked from
-bool CZCstlStake::GetModifier(uint64_t& nStakeModifier)
+// In case of regtest, next accumulator of 60 blocks after the block being staked from
+bool CZGrowStake::GetModifier(uint64_t& nStakeModifier)
 {
     CBlockIndex* pindex = GetIndexFrom();
     if (!pindex)
-        return false;
+        return error("%s: failed to get index from", __func__);
+
+    if(Params().NetworkID() == CBaseChainParams::REGTEST) {
+        // Stake modifier is fixed for now, move it to 60 blocks after this pindex in the future..
+        nStakeModifier = pindexFrom->nStakeModifier;
+        return true;
+    }
 
     int64_t nTimeBlockFrom = pindex->GetBlockTime();
     while (true) {
-        if (pindex->GetBlockTime() - nTimeBlockFrom > 60*60) {
+        if (pindex->GetBlockTime() - nTimeBlockFrom > 60 * 60) {
             nStakeModifier = pindex->nAccumulatorCheckpoint.Get64();
             return true;
         }
@@ -92,7 +98,7 @@ bool CZCstlStake::GetModifier(uint64_t& nStakeModifier)
     }
 }
 
-CDataStream CZCstlStake::GetUniqueness()
+CDataStream CZGrowStake::GetUniqueness()
 {
     //The unique identifier for a zGROW is a hash of the serial
     CDataStream ss(SER_GETHASH, 0);
@@ -100,7 +106,7 @@ CDataStream CZCstlStake::GetUniqueness()
     return ss;
 }
 
-bool CZCstlStake::CreateTxIn(CWallet* pwallet, CTxIn& txIn, uint256 hashTxOut)
+bool CZGrowStake::CreateTxIn(CWallet* pwallet, CTxIn& txIn, uint256 hashTxOut)
 {
     CBlockIndex* pindexCheckpoint = GetIndexFrom();
     if (!pindexCheckpoint)
@@ -113,15 +119,14 @@ bool CZCstlStake::CreateTxIn(CWallet* pwallet, CTxIn& txIn, uint256 hashTxOut)
     if (libzerocoin::ExtractVersionFromSerial(mint.GetSerialNumber()) < 2)
         return error("%s: serial extract is less than v2", __func__);
 
-    int nSecurityLevel = 100;
     CZerocoinSpendReceipt receipt;
-    if (!pwallet->MintToTxIn(mint, nSecurityLevel, hashTxOut, txIn, receipt, libzerocoin::SpendType::STAKE, GetIndexFrom()))
+    if (!pwallet->MintToTxIn(mint, hashTxOut, txIn, receipt, libzerocoin::SpendType::STAKE, pindexCheckpoint))
         return error("%s\n", receipt.GetStatusMessage());
 
     return true;
 }
 
-bool CZCstlStake::CreateTxOuts(CWallet* pwallet, vector<CTxOut>& vout, CAmount nTotal)
+bool CZGrowStake::CreateTxOuts(CWallet* pwallet, vector<CTxOut>& vout, CAmount nTotal)
 {
     //Create an output returning the zGROW that was staked
     CTxOut outReward;
@@ -149,19 +154,19 @@ bool CZCstlStake::CreateTxOuts(CWallet* pwallet, vector<CTxOut>& vout, CAmount n
     return true;
 }
 
-bool CZCstlStake::GetTxFrom(CTransaction& tx)
+bool CZGrowStake::GetTxFrom(CTransaction& tx)
 {
     return false;
 }
 
-bool CZCstlStake::MarkSpent(CWallet *pwallet, const uint256& txid)
+bool CZGrowStake::MarkSpent(CWallet *pwallet, const uint256& txid)
 {
-    CzGROWTracker* zpivTracker = pwallet->zpivTracker.get();
+    CzGROWTracker* zgrowTracker = pwallet->zgrowTracker.get();
     CMintMeta meta;
-    if (!zpivTracker->GetMetaFromStakeHash(hashSerial, meta))
+    if (!zgrowTracker->GetMetaFromStakeHash(hashSerial, meta))
         return error("%s: tracker does not have serialhash", __func__);
 
-    zpivTracker->SetPubcoinUsed(meta.hashPubcoin, txid);
+    zgrowTracker->SetPubcoinUsed(meta.hashPubcoin, txid);
     return true;
 }
 

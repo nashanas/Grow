@@ -1,2 +1,2 @@
-debian/manpages/growd.1
-debian/manpages/grow.conf.5
+doc/man/growd.1
+doc/man/grow-cli.1

@@ -1,6 +1,5 @@
 // Copyright (c) 2011-2013 The Bitcoin developers
-// Copyright (c) 2017 The PIVX developers
-// Copyright (c) 2018 The GROW developers
+// Copyright (c) 2017 The GROW developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,9 +18,6 @@
 #include <QMimeData>
 #include <QMouseEvent>
 #include <QPixmap>
-#if QT_VERSION < 0x050000
-#include <QUrl>
-#endif
 
 #if defined(HAVE_CONFIG_H)
 #include "config/grow-config.h" /* for USE_QRCODE */

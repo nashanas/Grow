@@ -1,1 +1,2 @@
 contrib/growd.bash-completion	growd
+contrib/grow-cli.bash-completion grow-cli
